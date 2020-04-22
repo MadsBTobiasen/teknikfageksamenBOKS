@@ -1,0 +1,16 @@
+Pille Adder:
+    Pille kan blive læst adskillige gange for at få en farve-rækkevidde? [X]
+    Pille kan blive puttet ind i en XML fil [/]
+    Lave et system for XML-filen []
+        Gemme []
+        Redigere []
+        Slette []
+    Brugergrænseflade
+        Menu-design (Se papir-noter)
+
+Opsætning:
+    Boks for intastning af IP-adresse på klient / enhed []
+    Brugergrænseflade
+        Menu-design
+        Knap-design
+
