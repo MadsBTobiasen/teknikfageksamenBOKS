@@ -14,3 +14,7 @@ Opsætning:
         Menu-design
         Knap-design
 
+<?xml version="1.0"?>
+<pills>
+    <pill color="c" rangeMin="0" rangeMax="0">a</pills>
+</pills>

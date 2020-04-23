@@ -22,6 +22,7 @@ public class sketch extends PApplet {
 
 Capture cam;
 UIElements uielement;
+XMLHandler xmlHandler;
 PillAdder pillAdder;
 int c;
 int currentScene = 3; 
@@ -47,7 +48,8 @@ public void setup() {
     cam.start();
 
     uielement = new UIElements();
-    pillAdder = new PillAdder(cam); 
+    xmlHandler = new XMLHandler();
+    pillAdder = new PillAdder(); 
 
     c = (0);
 }
@@ -55,7 +57,7 @@ public void setup() {
 public void draw() {
 
     if (currentScene == 0) {
-
+        println(uielement.optionBox("name", "name", "1", "2", "3"));
     }
     
     if (currentScene == 1) {
@@ -72,30 +74,20 @@ public void draw() {
 
     }
 
+}
 
-
-
-
-
-
-
-
-
-
+public void stop() {
 
 }
 class PillAdder {
     
-    UIElements uielements;
     int pillPixelX = 0;
     int pillPixelY = 0;
     int pillColorRangeMin = 0;
     int pillColorRangeMax = 0;
 
-    PillAdder(Capture camera) {
-        uielements = new UIElements();
+    PillAdder() {
 
-        cam = camera;
     }
     
     public void start() {
@@ -124,10 +116,6 @@ class PillAdder {
             //Sørger for at alle variablerne er reset til standard, så at værdier fra en tidligere analyse, ikke bære over til en ny.
             String pillName = null;
             String pillColor = null;
-            pillPixelX = 0;
-            pillPixelY = 0;
-            pillColorRangeMin = 0;
-            pillColorRangeMax = 0;
 
             //Opdateres pillColorRanges' således at værdierne kan sammenlignes, og sættes ind i variablerne.
             loadPixels(); 
@@ -161,13 +149,12 @@ class PillAdder {
             println("max range: " + pillColorRangeMax);
 
             //Nu hvor pillen er blevet registreret, og givet en farverækkevidde, spørger vi brugeren om at given pillen et navn.
-            String nameInput = showInputDialog("Færdig!\nGiv Pillen et navn:\n\nHøjeste Værdi: " + pillColorRangeMax + "\nLaveste Værdi: " + pillColorRangeMin + "\n\nTryk OK for at fortsætte, tryk Cancel for at afbryde");
+            String nameInput = showInputDialog("Færdig! Giv Pillen et navn:\n\nHøjeste Værdi: " + pillColorRangeMax + "\nLaveste Værdi: " + pillColorRangeMin + "\n\nTryk OK for at fortsætte, tryk Cancel for at afbryde");
             
             //Checker om brugeren har givet pillen et navn, eller afbrudt processen. Hvis nameInput ikke fik et navn / blev afbrudt vil nameInput være lig med null.
             if (nameInput == null) { //Ikke noget input eller afbrudt.
                 
-                showMessageDialog(null, "yeeeeet");
-                println("NOT SAVED!");
+                showMessageDialog(null, "Afbrudt, pillen blev ikke gemt.");
             
             } else { //Brugeren har intastet et navn.
                 
@@ -185,7 +172,9 @@ class PillAdder {
                 
                 }
 
-                println(pillName + "\n" + pillColor);
+                xmlHandler.save(pillName, pillColor, pillColorRangeMin, pillColorRangeMax);
+                pillPixelX = 0;
+                pillPixelY = 0;
             
             }
 
@@ -219,6 +208,110 @@ class UIElements {
             return true;
         } else {
             return false;
+        }
+
+    }
+
+
+   /* boolean confirmBox(String, boxName, String boxInfo) {
+        if(showConfirmDialog(null, boxName, boxInfo, YES_NO_OPTION) == 0) {
+            //Boksen har modtaget et "Yes"-svar.
+            return true;
+        } else {
+            //Boksen har modtaget et "Nej"-svar, eller boksen er blevet lukket.
+            return false;
+        }
+    }*/
+
+    public int optionBox(String boxName, String boxInfo, Object opt1, Object opt2, Object opt3) {
+        Object[] options = {opt1, opt2, opt3};
+
+        return showOptionDialog(
+            frame, boxInfo, boxName,
+            YES_NO_CANCEL_OPTION,
+            QUESTION_MESSAGE,
+            null, options, options[2]
+        );
+
+    }
+
+}
+class XMLHandler { 
+
+    XML xml;
+    XML[] children;
+
+    XMLHandler() {
+        xml = loadXML("data/pills.xml");
+    }
+    
+    //Pillens egenskaber vil blive gemt her.
+    public void save(String pillName, String pillColor, int minRange, int maxRange) {
+        //Checker om pillen optræder i XML-filen med checkForPill funktionen.
+        checkForPill(pillName, pillColor, minRange, maxRange);
+    }
+    
+    //Både pille navnet og pillefarven bliver checket, hvis nu at en pille kan komme i forskellige farver.
+    public void checkForPill(String pillName, String pillColor, int minRange, int maxRange) {
+        
+        int conflictingXMLrow = -1;
+        boolean pillFound = false;
+        xml = loadXML("data/pills.xml");
+        children = xml.getChildren("pill");
+
+        //Kigger XML-filen igennem for navne / farve-kombinationer.
+        for (int i = 0; i < children.length; ++i) {
+            
+            String xmlEntryName = children[i].getContent().toLowerCase();
+            String xmlEntryColor = children[i].getString("color").toLowerCase();
+
+            //Checker pillens navn og farve mod pillerne i XML-filen.
+            if (pillName.equals(xmlEntryName) && pillColor.equals(xmlEntryColor)) {
+                
+                conflictingXMLrow = i;
+                pillFound = true;
+
+            }
+
+        }
+
+
+        if(pillFound) {
+            //Der er blevet fundet en pille med samme navn og farve-kombo.
+            switch(uielement.optionBox("Pille eksistere allerede!", "boxInfo", "Overskriv", "Nyt Navn", "Afbryd")) {
+                
+                //Brugeren vil overskrive pillen.
+                case '0':
+
+                    children[conflictingXMLrow].setInt("minRange", minRange);
+                    children[conflictingXMLrow].setInt("maxRange", maxRange);
+                    children[conflictingXMLrow].setString("color", pillColor);
+                    children[conflictingXMLrow].setContent(pillName);
+
+                    saveXML(xml, "data/pills.xml");
+
+                    break;
+
+                //Brugeren vil give pillen et nyt navn / farve.
+                case '1':
+
+                    break;
+
+                //Brugeren afbryder.
+                default:
+
+                    break;
+
+            }
+        } else {
+            //Pillen eksistere ikke, og skrives ind i XML filen.
+            XML newChild = xml.addChild("pill");
+            newChild.setInt("minRange", minRange);
+            newChild.setInt("maxRange", maxRange);
+            newChild.setString("color", pillColor);
+            newChild.setContent(pillName);    
+
+            saveXML(xml, "data/pills.xml");
         }
 
     }

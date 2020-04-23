@@ -1,17 +1,12 @@
 class PillAdder {
     
-    UIElements uielements;
-    XMLHandler xmlHanlder;
     int pillPixelX = 0;
     int pillPixelY = 0;
     int pillColorRangeMin = 0;
     int pillColorRangeMax = 0;
 
-    PillAdder(Capture camera) {
-        uiElements = new UIElements();
-        xmlHandler =  new XMLHandler();
+    PillAdder() {
 
-        cam = camera;
     }
     
     void start() {
@@ -35,15 +30,11 @@ class PillAdder {
         line(490, 340, 490, 500);
         stroke(0);
 
-        if (uiElement.button(100, 200, 0, 100) && pillPixelX != 0 && pillPixelY != 0) { //Efter en pixel / pille (farve) er blevet valgt, begynd at læse farven. Kan kun blive trykket på, hvis der er blevet valgt en pille / pixel at analysere.
+        if (uielement.button(100, 200, 0, 100) && pillPixelX != 0 && pillPixelY != 0) { //Efter en pixel / pille (farve) er blevet valgt, begynd at læse farven. Kan kun blive trykket på, hvis der er blevet valgt en pille / pixel at analysere.
             
             //Sørger for at alle variablerne er reset til standard, så at værdier fra en tidligere analyse, ikke bære over til en ny.
             String pillName = null;
             String pillColor = null;
-            pillPixelX = 0;
-            pillPixelY = 0;
-            pillColorRangeMin = 0;
-            pillColorRangeMax = 0;
 
             //Opdateres pillColorRanges' således at værdierne kan sammenlignes, og sættes ind i variablerne.
             loadPixels(); 
@@ -100,13 +91,15 @@ class PillAdder {
                 
                 }
 
-                println(pillName + "\n" + pillColor);
+                xmlHandler.save(pillName, pillColor, pillColorRangeMin, pillColorRangeMax);
+                pillPixelX = 0;
+                pillPixelY = 0;
             
             }
 
         }
 
-        if (uiElement.button(50, 490, 340, 500)) { //Tryk på en pille, så systemet ved hvilken pixel der skal identificeres.
+        if (uielement.button(50, 490, 340, 500)) { //Tryk på en pille, så systemet ved hvilken pixel der skal identificeres.
         
             pillPixelX = mouseX;
             pillPixelY = mouseY;

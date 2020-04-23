@@ -3,6 +3,7 @@ import static javax.swing.JOptionPane.*;
 
 Capture cam;
 UIElements uielement;
+XMLHandler xmlHandler;
 PillAdder pillAdder;
 color c;
 int currentScene = 3; 
@@ -28,7 +29,8 @@ void setup() {
     cam.start();
 
     uielement = new UIElements();
-    pillAdder = new PillAdder(cam); 
+    xmlHandler = new XMLHandler();
+    pillAdder = new PillAdder(); 
 
     c = (0);
 }
@@ -36,7 +38,7 @@ void setup() {
 void draw() {
 
     if (currentScene == 0) {
-
+        println(uielement.optionBox("name", "name", "1", "2", "3"));
     }
     
     if (currentScene == 1) {
@@ -53,15 +55,8 @@ void draw() {
 
     }
 
+}
 
-
-
-
-
-
-
-
-
-
+void stop() {
 
 }
