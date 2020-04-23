@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <pills>
-  <pill color="c" maxRange="0" minRange="0">a</pill>
   <pill color="a" maxRange="-3158817" minRange="-3160100">a</pill>
-  <pill color="t" maxRange="-10190448" minRange="-10256491">t</pill>
+  <pill color="t" maxRange="-10124400" minRange="-10254966">t</pill>
+  <pill color="c" maxRange="-4148320" minRange="-4673896">c</pill>
 </pills>

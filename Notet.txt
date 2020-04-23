@@ -1,9 +1,9 @@
 Pille Adder:
     Pille kan blive læst adskillige gange for at få en farve-rækkevidde? [X]
-    Pille kan blive puttet ind i en XML fil [/]
-    Lave et system for XML-filen []
-        Gemme []
-        Redigere []
+    Pille kan blive puttet ind i en XML fil [x]
+    Lave et system for XML-filen [x]
+        Gemme [x]
+        Redigere [x]
         Slette []
     Brugergrænseflade
         Menu-design (Se papir-noter)

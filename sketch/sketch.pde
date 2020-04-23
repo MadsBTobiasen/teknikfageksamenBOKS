@@ -6,7 +6,7 @@ UIElements uielement;
 XMLHandler xmlHandler;
 PillAdder pillAdder;
 color c;
-int currentScene = 3; 
+int currentScene = 0; 
 /* 
 
 currentScene er en variable der kontrollere hvilken menu der bliver vist. 
@@ -38,7 +38,7 @@ void setup() {
 void draw() {
 
     if (currentScene == 0) {
-        println(uielement.optionBox("name", "name", "1", "2", "3"));
+
     }
     
     if (currentScene == 1) {

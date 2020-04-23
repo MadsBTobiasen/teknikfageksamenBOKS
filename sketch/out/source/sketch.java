@@ -25,7 +25,7 @@ UIElements uielement;
 XMLHandler xmlHandler;
 PillAdder pillAdder;
 int c;
-int currentScene = 3; 
+int currentScene = 0; 
 /* 
 
 currentScene er en variable der kontrollere hvilken menu der bliver vist. 
@@ -57,7 +57,11 @@ public void setup() {
 public void draw() {
 
     if (currentScene == 0) {
-        println(uielement.optionBox("name", "name", "1", "2", "3"));
+        for (int i = 0; i < xmlHandler.children.length; ++i) {
+            xmlHandler.load(i);
+            println(xmlHandler.rangeArray);
+        }
+        exit();
     }
     
     if (currentScene == 1) {
@@ -212,17 +216,6 @@ class UIElements {
 
     }
 
-
-   /* boolean confirmBox(String, boxName, String boxInfo) {
-        if(showConfirmDialog(null, boxName, boxInfo, YES_NO_OPTION) == 0) {
-            //Boksen har modtaget et "Yes"-svar.
-            return true;
-        } else {
-            //Boksen har modtaget et "Nej"-svar, eller boksen er blevet lukket.
-            return false;
-        }
-    }*/
-
     public int optionBox(String boxName, String boxInfo, Object opt1, Object opt2, Object opt3) {
         Object[] options = {opt1, opt2, opt3};
 
@@ -240,11 +233,21 @@ class XMLHandler {
 
     XML xml;
     XML[] children;
+    int[] rangeArray = {0, 0};
 
     XMLHandler() {
         xml = loadXML("data/pills.xml");
+        children = xml.getChildren("pill");
     }
-    
+
+    public void load(int columnToRead) {
+        xml = loadXML("data/pills.xml");
+        children = xml.getChildren("pill");
+
+        rangeArray[0] = children[columnToRead].getInt("minRange");
+        rangeArray[1] = children[columnToRead].getInt("maxRange");
+    }
+
     //Pillens egenskaber vil blive gemt her.
     public void save(String pillName, String pillColor, int minRange, int maxRange) {
         //Checker om pillen optræder i XML-filen med checkForPill funktionen.
@@ -275,13 +278,12 @@ class XMLHandler {
 
         }
 
-
         if(pillFound) {
             //Der er blevet fundet en pille med samme navn og farve-kombo.
-            switch(uielement.optionBox("Pille eksistere allerede!", "boxInfo", "Overskriv", "Nyt Navn", "Afbryd")) {
+            switch(uielement.optionBox("Pille eksistere allerede!", "Pillen eksistere allerede.\nSkal den eksisterende pille erstattes, eller vil du give din pille et nyt navn?\nO", "Erstat", "Nyt Navn", "Afbryd")) {
                 
                 //Brugeren vil overskrive pillen.
-                case '0':
+                case 0:
 
                     children[conflictingXMLrow].setInt("minRange", minRange);
                     children[conflictingXMLrow].setInt("maxRange", maxRange);
@@ -293,7 +295,12 @@ class XMLHandler {
                     break;
 
                 //Brugeren vil give pillen et nyt navn / farve.
-                case '1':
+                case 1:
+
+                    String nameInput = showInputDialog("Giv pillen et nyt navn:");
+                    String colorInput = showInputDialog("Angiv pillens farve:");
+
+                    save(nameInput, colorInput, minRange, maxRange);
 
                     break;
 

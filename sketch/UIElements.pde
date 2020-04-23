@@ -16,17 +16,6 @@ class UIElements {
 
     }
 
-
-   /* boolean confirmBox(String, boxName, String boxInfo) {
-        if(showConfirmDialog(null, boxName, boxInfo, YES_NO_OPTION) == 0) {
-            //Boksen har modtaget et "Yes"-svar.
-            return true;
-        } else {
-            //Boksen har modtaget et "Nej"-svar, eller boksen er blevet lukket.
-            return false;
-        }
-    }*/
-
     int optionBox(String boxName, String boxInfo, Object opt1, Object opt2, Object opt3) {
         Object[] options = {opt1, opt2, opt3};
 
