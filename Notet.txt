@@ -6,15 +6,10 @@ Pille Adder:
         Redigere [x]
         Slette []
     Brugergrænseflade
-        Menu-design (Se papir-noter)
+        Menu-design (Se papir-noter) [x]
 
 Opsætning:
     Boks for intastning af IP-adresse på klient / enhed []
     Brugergrænseflade
         Menu-design
         Knap-design
-
-<?xml version="1.0"?>
-<pills>
-    <pill color="c" rangeMin="0" rangeMax="0">a</pills>
-</pills>

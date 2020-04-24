@@ -2,7 +2,9 @@ class XMLHandler {
 
     XML xml;
     XML[] children;
-    int[] rangeArray = {0, 0};
+    String outputName = "";
+    int outputMinRange = 0;
+    int outputMaxRange = 0;
 
     XMLHandler() {
         xml = loadXML("data/pills.xml");
@@ -14,8 +16,9 @@ class XMLHandler {
         xml = loadXML("data/pills.xml");
         children = xml.getChildren("pill");
 
-        rangeArray[0] = children[columnToRead].getInt("minRange");
-        rangeArray[1] = children[columnToRead].getInt("maxRange");
+        outputName = children[columnToRead].getContent();
+        outputMinRange = children[columnToRead].getInt("minRange");
+        outputMaxRange = children[columnToRead].getInt("maxRange");
     }
 
     //Pillens egenskaber vil blive gemt her.
@@ -23,7 +26,7 @@ class XMLHandler {
         //Checker om pillen optræder i XML-filen med checkForPill funktionen.
         checkForPill(pillName, pillColor, minRange, maxRange);
     }
-    
+
     //Både pille navnet og pillefarven bliver checket, hvis nu at en pille kan komme i forskellige farver.
     void checkForPill(String pillName, String pillColor, int minRange, int maxRange) {
         xml = loadXML("data/pills.xml");
@@ -33,15 +36,15 @@ class XMLHandler {
         boolean pillFound = false;
 
         //Kigger XML-filen igennem for navne / farve-kombinationer.
-        for (int i = 0; i < children.length; ++i) {
+        for (int i = 0; i < children.length-1; ++i) {
             
-            String xmlEntryName = children[i].getContent().toLowerCase();
-            String xmlEntryColor = children[i].getString("color").toLowerCase();
+            String xmlEntryName = children[i+1].getContent().toLowerCase();
+            String xmlEntryColor = children[i+1].getString("color").toLowerCase();
 
             //Checker pillens navn og farve mod pillerne i XML-filen.
             if (pillName.equals(xmlEntryName) && pillColor.equals(xmlEntryColor)) {
                 
-                conflictingXMLrow = i;
+                conflictingXMLrow = i+1;
                 pillFound = true;
 
             }
@@ -50,7 +53,7 @@ class XMLHandler {
 
         if(pillFound) {
             //Der er blevet fundet en pille med samme navn og farve-kombo.
-            switch(uielement.optionBox("Pille eksistere allerede!", "Pillen eksistere allerede.\nSkal den eksisterende pille erstattes, eller vil du give din pille et nyt navn?\nO", "Erstat", "Nyt Navn", "Afbryd")) {
+            switch(uielement.optionDialog("Pille eksistere allerede!", "Pillen eksistere allerede.\nSkal den eksisterende pille erstattes, eller vil du give din pille et nyt navn?\n", "Erstat", "Nyt Navn", "Afbryd")) {
                 
                 //Brugeren vil overskrive pillen.
                 case 0:
@@ -70,7 +73,15 @@ class XMLHandler {
                     String nameInput = showInputDialog("Giv pillen et nyt navn:");
                     String colorInput = showInputDialog("Angiv pillens farve:");
 
-                    save(nameInput, colorInput, minRange, maxRange);
+                    if (colorInput == null) {
+                        //Brugeren har ikke angivet en farve.
+                        save(nameInput, "ukendt", minRange, maxRange);
+
+                    } else { 
+                        //Brugeren har angivet en farve.
+                        save(nameInput, colorInput, minRange, maxRange);
+                    
+                    }
 
                     break;
 
@@ -89,6 +100,7 @@ class XMLHandler {
             newChild.setContent(pillName);    
 
             saveXML(xml, "data/pills.xml");
+            uielement.informationDialog("Pille gemt", "Success!!\nDin pille blev gemt.", "information");
         }
 
     }

@@ -20,11 +20,15 @@ public class sketch extends PApplet {
 
 
 
+PFont font;
 Capture cam;
 UIElements uielement;
 XMLHandler xmlHandler;
 PillAdder pillAdder;
-int c;
+int r = 0;
+int g = 0;
+int b = 0;
+int c = 0xffb4b4b4;
 int currentScene = 0; 
 /* 
 
@@ -32,7 +36,7 @@ currentScene er en variable der kontrollere hvilken menu der bliver vist.
 0 = Startmenu.
 1 = Program kører og status indikatører bliver vist.
 2 = Opsætningsmenu, hvor brugeren indstiller IP-adresse på enheden.
-3 = "Pill-Adder", altså den menu hvor brugeren kan tilføje nye piller til systemet.
+3 = "Pill-Adder", en menu hvor brugeren kan tilføje nye piller til systemet.
 
 */
 
@@ -44,6 +48,9 @@ int pillColorRangeMax = 0;
 public void setup() {
     
 
+    font = createFont("Arial", 32);
+    textFont(font);
+
     cam = new Capture(this);
     cam.start();
 
@@ -51,17 +58,13 @@ public void setup() {
     xmlHandler = new XMLHandler();
     pillAdder = new PillAdder(); 
 
-    c = (0);
 }
 
 public void draw() {
 
     if (currentScene == 0) {
-        for (int i = 0; i < xmlHandler.children.length; ++i) {
-            xmlHandler.load(i);
-            println(xmlHandler.rangeArray);
-        }
-        exit();
+        xmlHandler.remove("panodil");
+
     }
     
     if (currentScene == 1) {
@@ -80,8 +83,8 @@ public void draw() {
 
 }
 
-public void stop() {
-
+public void mousePressed() {
+    println(mouseX + " " + mouseY);
 }
 class PillAdder {
     
@@ -89,33 +92,67 @@ class PillAdder {
     int pillPixelY = 0;
     int pillColorRangeMin = 0;
     int pillColorRangeMax = 0;
+    int framesToTake = 100;
+
+    boolean informationSeen = false;
+
+    //Variabler til GUI.
+    int camX = uielement.camX;
+    int camY = uielement.camY;
+    int camW = uielement.camW;
+    int camH = uielement.camH;
+    
+    int seperatorW = 5;
+    int backgroundC = 0xffb4b4b4;
+
+    int bttnHelpStartW = (camW-seperatorW*2)/2;    
+    int bttnHelpStartH = (height-camH-3*seperatorW)/2;
+
+    int bttnStartX = seperatorW;
+    int bttnStartY = seperatorW;
+    int bttnHelpX = seperatorW*2+bttnHelpStartW;
+    int bttnHelpY = seperatorW;
+    
+    int pillColorFieldX = seperatorW;
+    int pillColorFieldY = 2*seperatorW+bttnHelpStartH;
+    int pillColorFieldW = camW - seperatorW;
+    int pillColorFieldH = bttnHelpStartH;
+
+    boolean drawColorBoxes = false;
+    int pillTextX = camW+seperatorW*2;
+    int pillTextY = seperatorW;
+    int pillTextColorBoxW = 50; 
+    int pillTextColorBoxX = width-seperatorW-pillTextColorBoxW;
+    int pillTextW = width-seperatorW-pillTextX;
+    int pillTextH = 50;
+    int averageColor = 0;
+    int textSize = 28;
+    int boxSplitterW = 10;
+    String xmlPillName = "";
+    //Variabler til GUI slut.
 
     PillAdder() {
 
     }
     
     public void start() {
-
+        colorMode(RGB, 255, 255, 255);
         if (cam.available() == true) {
             cam.read();
         }
-    
-        image(cam, -100, 240);
 
-        fill(c);
-        rect(0, 0, 100, 100);
-        fill(0);
-        rect(100, 0, 100, 100);
+        drawUI();
 
-        //Tegner en boks om det område som pilleæsken skal ligge i.
-        stroke(255, 0, 0);
-        line(50, 340, 490, 340);
-        line(50, 500, 490, 500);
-        line(50, 340, 50, 500);
-        line(490, 340, 490, 500);
-        stroke(0);
+        if (!informationSeen) {
+            uielement.informationDialog("Hjælp", "Velkommen til Pill-Adder.\n\nHer kan du tilføje dine piller til systemet, så systemet kan genkende dem, og sende dig relevante notifikiationer.\nFor at starte, skal du anbringe pilleæsken indenfor den røde kasse, og dernæst trykke på pillen du ønsker at gemme. \nHerefter tryk på 'Start', og lad systemet arbejde. ", "information");
+            informationSeen = true;
+        }
 
-        if (uielement.button(100, 200, 0, 100) && pillPixelX != 0 && pillPixelY != 0) { //Efter en pixel / pille (farve) er blevet valgt, begynd at læse farven. Kan kun blive trykket på, hvis der er blevet valgt en pille / pixel at analysere.
+        if (uielement.button(bttnHelpX, bttnHelpX+bttnHelpStartW, bttnHelpY, bttnHelpY+bttnHelpStartH)) {
+            informationSeen = false;
+        }
+
+        if (uielement.button(bttnStartX, bttnStartX+bttnHelpStartW, bttnStartY, bttnStartY+bttnHelpStartH) && pillPixelX != 0 && pillPixelY != 0) { //Efter en pixel / pille (farve) er blevet valgt, begynd at læse farven. Kan kun blive trykket på, hvis der er blevet valgt en pille / pixel at analysere.
             
             //Sørger for at alle variablerne er reset til standard, så at værdier fra en tidligere analyse, ikke bære over til en ny.
             String pillName = null;
@@ -127,7 +164,7 @@ class PillAdder {
             pillColorRangeMax = pixels[pillPixelY*width+pillPixelX];
 
             //Vi tager 1000 billeder af den angivne pixel, og checker dens farve. 
-            for (int i = 0; i < 1; ++i) {
+            for (int i = 0; i < framesToTake; ++i) {
                 
                 delay(200);
                 cam.read();
@@ -158,7 +195,7 @@ class PillAdder {
             //Checker om brugeren har givet pillen et navn, eller afbrudt processen. Hvis nameInput ikke fik et navn / blev afbrudt vil nameInput være lig med null.
             if (nameInput == null) { //Ikke noget input eller afbrudt.
                 
-                showMessageDialog(null, "Afbrudt, pillen blev ikke gemt.");
+                uielement.informationDialog("Afbrudt, pillen blev ikke gemt.");
             
             } else { //Brugeren har intastet et navn.
                 
@@ -167,11 +204,11 @@ class PillAdder {
                 
                 //Hvis ingen farve er opgivet, får den bare en "ukendt"-label.
                 if (colorInput == null) {
-
+                    //Brugeren har ikke angivet en farve.
                     pillColor = "ukendt";
 
                 } else { //Pillens farve bliver puttet ind i en variabel.
-
+                    //Brugeren har angivet en farve.
                     pillColor = colorInput;
                 
                 }
@@ -184,7 +221,7 @@ class PillAdder {
 
         }
 
-        if (uielement.button(50, 490, 340, 500)) { //Tryk på en pille, så systemet ved hvilken pixel der skal identificeres.
+        if (uielement.button(uielement.scanAreaX, uielement.scanAreaX+uielement.scanAreaW, uielement.scanAreaY, uielement.scanAreaY+uielement.scanAreaH)) { //Tryk på en pille, så systemet ved hvilken pixel der skal identificeres.
         
             pillPixelX = mouseX;
             pillPixelY = mouseY;
@@ -192,16 +229,116 @@ class PillAdder {
             loadPixels();
             c = pixels[mouseY*width+mouseX];
 
+            println(hex(c, 6));
+
         }    
     
+    }
+
+    public void drawUI() {
+
+        //Gør baggrunden grå.
+        background(backgroundC);
+        fill(200);
+        rectMode(CORNER);
+        rect(0, 0, camW, height);
+        rect(camW, 0, seperatorW, height);
+        //Kamera-området.
+        uielement.drawCameraArea();
+        //Knapper.
+        stroke(0);
+        
+        fill(0xff1d60fe);
+        rect(bttnStartX, bttnStartY, bttnHelpStartW, bttnHelpStartH);
+        rect(bttnHelpX, bttnHelpY, bttnHelpStartW, bttnHelpStartH);
+        fill(c);
+        rect(pillColorFieldX, pillColorFieldY, pillColorFieldW, pillColorFieldH);
+
+        textAlign(CENTER, CENTER);
+        textSize(textSize);
+        fill(225);
+        text("Start", bttnStartX, bttnStartY, bttnStartX+bttnHelpStartW, bttnStartY+bttnHelpStartH-6);       
+        text("Hjælp", bttnHelpX, bttnHelpY, bttnHelpX-15, bttnHelpY+bttnHelpStartH-6);
+        fill(0);
+        text("Farven på valgte pille", pillColorFieldX, pillColorFieldY, pillColorFieldX+pillColorFieldW, pillColorFieldY-10);
+
+        line(camW+seperatorW, 0, camW+seperatorW, height);
+        //Liste af piller.
+        fill(188);
+        rect(pillTextX, pillTextY, pillTextW, pillTextH);
+        fill(162);
+        rect(pillTextX, pillTextY+pillTextH+seperatorW, pillTextW, boxSplitterW);
+        fill(0);
+        textAlign(CENTER, CENTER);
+        textSize(textSize);
+        text("Gemte piller:", pillTextX, pillTextY, pillTextX-pillTextW-57, pillTextY+pillTextH-10);
+
+        for (int i = 0; i < xmlHandler.children.length-1; ++i) {
+            xmlHandler.load(i+1);
+            xmlPillName = xmlHandler.outputName;
+            xmlPillName = xmlPillName.substring(0,1).toUpperCase() + xmlPillName.substring(1).toLowerCase();
+            averageColor = (xmlHandler.outputMinRange+xmlHandler.outputMaxRange)/2;
+            
+            int r=(averageColor>>16)&255;
+            int g=(averageColor>>8)&255;
+            int b=averageColor&255; 
+
+            //println(hex(xmlHandler.outputMinRange, 6) + " " + hex(xmlHandler.outputMaxRange, 6));
+
+            fill(188);
+            rect(pillTextX, pillTextY+seperatorW+boxSplitterW+(i+1)*(pillTextH+seperatorW), pillTextW, pillTextH);
+            fill(0);
+            textAlign(LEFT, CENTER);
+            textSize(textSize);
+            text(xmlPillName, pillTextX+seperatorW, pillTextY+seperatorW+boxSplitterW+(i+1)*(pillTextH+seperatorW)+textSize/2+6);
+
+            if(drawColorBoxes) {
+                fill(r, g, b);
+                rect(pillTextColorBoxX, pillTextY+seperatorW+boxSplitterW+(i+1)*(pillTextH+seperatorW), pillTextColorBoxW, pillTextH);
+            }
+
+        }
+
+        rectMode(CENTER);
+        noStroke();
+
     }
 
 
 }
 class UIElements {
     
+    //Kamera
+    int camX = 0;
+    int camY = 240;
+    int camW = 540;    
+    int camH = 360;
+    int scanAreaSeperationX = 50;
+    int scanAreaSeperationY = 100;
+    int scanAreaX = camX + scanAreaSeperationX;
+    int scanAreaY = camY + scanAreaSeperationY;
+    int scanAreaW = camW - 2*scanAreaSeperationX;    
+    int scanAreaH = camH - 2*scanAreaSeperationY;
+
     //Constructor
     UIElements() {
+
+    }
+
+    public void drawCameraArea() {
+
+        //Tegner kameraets syn.
+        image(cam, camW - 639, 240);
+        
+        //Line ser sådan ud: line(x1, y1, x2, y2);
+        stroke(255, 0, 0); //Giver boksen en rød farve.
+        //Vertikale linjer.
+        line(scanAreaX, scanAreaY, scanAreaX+scanAreaW, scanAreaY);
+        line(scanAreaX, scanAreaY+scanAreaH, scanAreaX+scanAreaW, scanAreaY+scanAreaH);
+        //Horisontale linjer.
+        line(scanAreaX, scanAreaY, scanAreaX, scanAreaY+scanAreaH);
+        line(scanAreaX+scanAreaW, scanAreaY, scanAreaX+scanAreaW, scanAreaY+scanAreaH);
+        noStroke();
 
     }
 
@@ -216,14 +353,55 @@ class UIElements {
 
     }
 
-    public int optionBox(String boxName, String boxInfo, Object opt1, Object opt2, Object opt3) {
+    public int optionDialog(String paneName, String paneMessage, Object opt1, Object opt2, Object opt3) {
         Object[] options = {opt1, opt2, opt3};
 
+        //showOptionDialog laver en dialog box der viser 3 muligheder, disse 3 muligheder er blevet angivet i options-array'et.
+        //showOptionDialog retunere en værdi mellem 0-2, alt efter hvilken mulighed der blev valgt
         return showOptionDialog(
-            frame, boxInfo, boxName,
+            frame, paneMessage, paneName,
             YES_NO_CANCEL_OPTION,
             QUESTION_MESSAGE,
             null, options, options[2]
+        );
+
+    }
+
+    //Information boks med kun en besked.
+    public void informationDialog(String paneMessage) {
+        showMessageDialog(frame, paneMessage);
+    }
+
+    public void informationDialog(String paneName, String paneMessage, String messageType) {
+        int[] messageTypes = {PLAIN_MESSAGE, INFORMATION_MESSAGE, ERROR_MESSAGE, WARNING_MESSAGE};
+        int arrayEntry = 0;
+
+        //Switch case til at håndtere hvilket dialog-type der skal vises.
+        switch(messageType.toLowerCase()) {
+            case "plain":
+                arrayEntry = 0;
+                break;
+
+            case "information":
+                arrayEntry = 1;
+                break;
+
+            case "error":
+                arrayEntry = 2;
+                break;
+
+            case "warning":
+                arrayEntry = 3;
+                break;     
+
+            default:
+                arrayEntry = 0;
+                break;                           
+        }
+        
+        showMessageDialog(
+            frame, paneMessage, paneName,
+            messageTypes[arrayEntry]
         );
 
     }
@@ -233,7 +411,9 @@ class XMLHandler {
 
     XML xml;
     XML[] children;
-    int[] rangeArray = {0, 0};
+    String outputName = "";
+    int outputMinRange = 0;
+    int outputMaxRange = 0;
 
     XMLHandler() {
         xml = loadXML("data/pills.xml");
@@ -241,11 +421,13 @@ class XMLHandler {
     }
 
     public void load(int columnToRead) {
+        //Farverækkevider fra XML-filen, bliver hentet og lagt ind i et array, der kan tilgås af scanneren.
         xml = loadXML("data/pills.xml");
         children = xml.getChildren("pill");
 
-        rangeArray[0] = children[columnToRead].getInt("minRange");
-        rangeArray[1] = children[columnToRead].getInt("maxRange");
+        outputName = children[columnToRead].getContent();
+        outputMinRange = children[columnToRead].getInt("minRange");
+        outputMaxRange = children[columnToRead].getInt("maxRange");
     }
 
     //Pillens egenskaber vil blive gemt her.
@@ -254,24 +436,44 @@ class XMLHandler {
         checkForPill(pillName, pillColor, minRange, maxRange);
     }
     
-    //Både pille navnet og pillefarven bliver checket, hvis nu at en pille kan komme i forskellige farver.
-    public void checkForPill(String pillName, String pillColor, int minRange, int maxRange) {
-        
-        int conflictingXMLrow = -1;
-        boolean pillFound = false;
+    public void remove(String pillName) {
         xml = loadXML("data/pills.xml");
         children = xml.getChildren("pill");
 
-        //Kigger XML-filen igennem for navne / farve-kombinationer.
         for (int i = 0; i < children.length; ++i) {
             
             String xmlEntryName = children[i].getContent().toLowerCase();
-            String xmlEntryColor = children[i].getString("color").toLowerCase();
+
+            //Checker pillens navn og farve mod pillerne i XML-filen.
+            if (pillName.equals(xmlEntryName)) {
+
+                println("aa");
+                xml.removeChild(children[i]);
+
+            }
+
+        }
+
+    }
+
+    //Både pille navnet og pillefarven bliver checket, hvis nu at en pille kan komme i forskellige farver.
+    public void checkForPill(String pillName, String pillColor, int minRange, int maxRange) {
+        xml = loadXML("data/pills.xml");
+        children = xml.getChildren("pill");
+
+        int conflictingXMLrow = -1;
+        boolean pillFound = false;
+
+        //Kigger XML-filen igennem for navne / farve-kombinationer.
+        for (int i = 0; i < children.length-1; ++i) {
+            
+            String xmlEntryName = children[i+1].getContent().toLowerCase();
+            String xmlEntryColor = children[i+1].getString("color").toLowerCase();
 
             //Checker pillens navn og farve mod pillerne i XML-filen.
             if (pillName.equals(xmlEntryName) && pillColor.equals(xmlEntryColor)) {
                 
-                conflictingXMLrow = i;
+                conflictingXMLrow = i+1;
                 pillFound = true;
 
             }
@@ -280,7 +482,7 @@ class XMLHandler {
 
         if(pillFound) {
             //Der er blevet fundet en pille med samme navn og farve-kombo.
-            switch(uielement.optionBox("Pille eksistere allerede!", "Pillen eksistere allerede.\nSkal den eksisterende pille erstattes, eller vil du give din pille et nyt navn?\nO", "Erstat", "Nyt Navn", "Afbryd")) {
+            switch(uielement.optionDialog("Pille eksistere allerede!", "Pillen eksistere allerede.\nSkal den eksisterende pille erstattes, eller vil du give din pille et nyt navn?\n", "Erstat", "Nyt Navn", "Afbryd")) {
                 
                 //Brugeren vil overskrive pillen.
                 case 0:
@@ -300,7 +502,15 @@ class XMLHandler {
                     String nameInput = showInputDialog("Giv pillen et nyt navn:");
                     String colorInput = showInputDialog("Angiv pillens farve:");
 
-                    save(nameInput, colorInput, minRange, maxRange);
+                    if (colorInput == null) {
+                        //Brugeren har ikke angivet en farve.
+                        save(nameInput, "ukendt", minRange, maxRange);
+
+                    } else { 
+                        //Brugeren har angivet en farve.
+                        save(nameInput, colorInput, minRange, maxRange);
+                    
+                    }
 
                     break;
 
@@ -319,6 +529,7 @@ class XMLHandler {
             newChild.setContent(pillName);    
 
             saveXML(xml, "data/pills.xml");
+            uielement.informationDialog("Pille gemt", "Success!!\nDin pille blev gemt.", "information");
         }
 
     }
