@@ -24,12 +24,15 @@ PFont font;
 Capture cam;
 UIElements uielement;
 XMLHandler xmlHandler;
+//
+Scanner scanner;
+//
 PillAdder pillAdder;
 int r = 0;
 int g = 0;
 int b = 0;
 int c = 0xffb4b4b4;
-int currentScene = 0; 
+int currentScene = 1; 
 /* 
 
 currentScene er en variable der kontrollere hvilken menu der bliver vist. 
@@ -56,25 +59,33 @@ public void setup() {
 
     uielement = new UIElements();
     xmlHandler = new XMLHandler();
+    //
+    scanner = new Scanner();
+    //
     pillAdder = new PillAdder(); 
 
 }
 
 public void draw() {
 
+    //Startmenu
     if (currentScene == 0) {
-        xmlHandler.remove("panodil");
 
     }
     
+    //Scanner
     if (currentScene == 1) {
+
+        scanner.start();
 
     }
 
+    //Opsætning
     if (currentScene == 2) {
 
     }
 
+    //Pill-Adder
     if (currentScene == 3) {
 
         pillAdder.start();
@@ -137,9 +148,6 @@ class PillAdder {
     
     public void start() {
         colorMode(RGB, 255, 255, 255);
-        if (cam.available() == true) {
-            cam.read();
-        }
 
         drawUI();
 
@@ -148,10 +156,12 @@ class PillAdder {
             informationSeen = true;
         }
 
+        //Åbner hjælp knappen via en boolean.
         if (uielement.button(bttnHelpX, bttnHelpX+bttnHelpStartW, bttnHelpY, bttnHelpY+bttnHelpStartH)) {
             informationSeen = false;
         }
 
+        //Start-knap, til at starte analysering af pixel.
         if (uielement.button(bttnStartX, bttnStartX+bttnHelpStartW, bttnStartY, bttnStartY+bttnHelpStartH) && pillPixelX != 0 && pillPixelY != 0) { //Efter en pixel / pille (farve) er blevet valgt, begynd at læse farven. Kan kun blive trykket på, hvis der er blevet valgt en pille / pixel at analysere.
             
             //Sørger for at alle variablerne er reset til standard, så at værdier fra en tidligere analyse, ikke bære over til en ny.
@@ -221,6 +231,7 @@ class PillAdder {
 
         }
 
+        //Vælg-pixel-boks.
         if (uielement.button(uielement.scanAreaX, uielement.scanAreaX+uielement.scanAreaW, uielement.scanAreaY, uielement.scanAreaY+uielement.scanAreaH)) { //Tryk på en pille, så systemet ved hvilken pixel der skal identificeres.
         
             pillPixelX = mouseX;
@@ -306,6 +317,23 @@ class PillAdder {
 
 
 }
+class Scanner {
+
+    Scanner() {
+
+    }
+
+    public void start() {
+        drawUI();
+    }
+
+
+
+    public void drawUI() {
+        uielement.drawCameraArea();
+    }
+
+}
 class UIElements {
     
     //Kamera
@@ -326,6 +354,11 @@ class UIElements {
     }
 
     public void drawCameraArea() {
+
+        //Læser en frame fra kameraet.
+        if (cam.available() == true) {
+            cam.read();
+        }
 
         //Tegner kameraets syn.
         image(cam, camW - 639, 240);
@@ -420,6 +453,7 @@ class XMLHandler {
         children = xml.getChildren("pill");
     }
 
+    //Void loader XML-filens variabler ind i nogle variabler, med et tal angivet som hvilken række der skal skannes.
     public void load(int columnToRead) {
         //Farverækkevider fra XML-filen, bliver hentet og lagt ind i et array, der kan tilgås af scanneren.
         xml = loadXML("data/pills.xml");
@@ -433,27 +467,7 @@ class XMLHandler {
     //Pillens egenskaber vil blive gemt her.
     public void save(String pillName, String pillColor, int minRange, int maxRange) {
         //Checker om pillen optræder i XML-filen med checkForPill funktionen.
-        checkForPill(pillName, pillColor, minRange, maxRange);
-    }
-    
-    public void remove(String pillName) {
-        xml = loadXML("data/pills.xml");
-        children = xml.getChildren("pill");
-
-        for (int i = 0; i < children.length; ++i) {
-            
-            String xmlEntryName = children[i].getContent().toLowerCase();
-
-            //Checker pillens navn og farve mod pillerne i XML-filen.
-            if (pillName.equals(xmlEntryName)) {
-
-                println("aa");
-                xml.removeChild(children[i]);
-
-            }
-
-        }
-
+        checkForPill(pillName.toLowerCase(), pillColor.toLowerCase(), minRange, maxRange);
     }
 
     //Både pille navnet og pillefarven bliver checket, hvis nu at en pille kan komme i forskellige farver.

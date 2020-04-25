@@ -19,6 +19,11 @@ class UIElements {
 
     void drawCameraArea() {
 
+        //Læser en frame fra kameraet.
+        if (cam.available() == true) {
+            cam.read();
+        }
+
         //Tegner kameraets syn.
         image(cam, camW - 639, 240);
         

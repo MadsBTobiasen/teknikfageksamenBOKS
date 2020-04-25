@@ -11,6 +11,7 @@ class XMLHandler {
         children = xml.getChildren("pill");
     }
 
+    //Void loader XML-filens variabler ind i nogle variabler, med et tal angivet som hvilken række der skal skannes.
     void load(int columnToRead) {
         //Farverækkevider fra XML-filen, bliver hentet og lagt ind i et array, der kan tilgås af scanneren.
         xml = loadXML("data/pills.xml");
@@ -24,7 +25,7 @@ class XMLHandler {
     //Pillens egenskaber vil blive gemt her.
     void save(String pillName, String pillColor, int minRange, int maxRange) {
         //Checker om pillen optræder i XML-filen med checkForPill funktionen.
-        checkForPill(pillName, pillColor, minRange, maxRange);
+        checkForPill(pillName.toLowerCase(), pillColor.toLowerCase(), minRange, maxRange);
     }
 
     //Både pille navnet og pillefarven bliver checket, hvis nu at en pille kan komme i forskellige farver.

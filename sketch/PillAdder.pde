@@ -43,15 +43,13 @@ class PillAdder {
     String xmlPillName = "";
     //Variabler til GUI slut.
 
+    //Constructor
     PillAdder() {
 
     }
     
     void start() {
         colorMode(RGB, 255, 255, 255);
-        if (cam.available() == true) {
-            cam.read();
-        }
 
         drawUI();
 
@@ -60,10 +58,12 @@ class PillAdder {
             informationSeen = true;
         }
 
+        //Åbner hjælp knappen via en boolean.
         if (uielement.button(bttnHelpX, bttnHelpX+bttnHelpStartW, bttnHelpY, bttnHelpY+bttnHelpStartH)) {
             informationSeen = false;
         }
 
+        //Start-knap, til at starte analysering af pixel.
         if (uielement.button(bttnStartX, bttnStartX+bttnHelpStartW, bttnStartY, bttnStartY+bttnHelpStartH) && pillPixelX != 0 && pillPixelY != 0) { //Efter en pixel / pille (farve) er blevet valgt, begynd at læse farven. Kan kun blive trykket på, hvis der er blevet valgt en pille / pixel at analysere.
             
             //Sørger for at alle variablerne er reset til standard, så at værdier fra en tidligere analyse, ikke bære over til en ny.
@@ -133,6 +133,7 @@ class PillAdder {
 
         }
 
+        //Vælg-pixel-boks.
         if (uielement.button(uielement.scanAreaX, uielement.scanAreaX+uielement.scanAreaW, uielement.scanAreaY, uielement.scanAreaY+uielement.scanAreaH)) { //Tryk på en pille, så systemet ved hvilken pixel der skal identificeres.
         
             pillPixelX = mouseX;

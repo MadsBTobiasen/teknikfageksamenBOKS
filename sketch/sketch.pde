@@ -5,12 +5,15 @@ PFont font;
 Capture cam;
 UIElements uielement;
 XMLHandler xmlHandler;
+//
+Scanner scanner;
+//
 PillAdder pillAdder;
 int r = 0;
 int g = 0;
 int b = 0;
 color c = #b4b4b4;
-int currentScene = 0; 
+int currentScene = 1; 
 /* 
 
 currentScene er en variable der kontrollere hvilken menu der bliver vist. 
@@ -37,6 +40,9 @@ void setup() {
 
     uielement = new UIElements();
     xmlHandler = new XMLHandler();
+    //
+    scanner = new Scanner();
+    //
     pillAdder = new PillAdder(); 
 
 }
@@ -50,6 +56,8 @@ void draw() {
     
     //Scanner
     if (currentScene == 1) {
+
+        scanner.start();
 
     }
 
