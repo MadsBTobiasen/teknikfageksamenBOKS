@@ -331,11 +331,11 @@ class Scanner {
     int maxY = minY + uielement.scanAreaH-2;
     int y = minY;
 
-    int timeBetweenScan = 1100; //Int der angiver hvor lang tid der skal gå mellem hver komplette scanning.
+    int timeBetweenScan = 5100; //Int der angiver hvor lang tid der skal gå mellem hver komplette scanning.
     int scanTimer;
     boolean scannerInactive = true;
 
-    int ccc = 0;
+    int ccc = color(0, 255, 0);
     //Constructor
     Scanner() {
 
@@ -384,7 +384,7 @@ class Scanner {
             println("currentscan @frame: " + x + " " + y + " : currentcolor: " + pixels[y*width+x]);
             for (int i = 0; i < xmlHandler.children.length-1; ++i) {
                 xmlHandler.load(i+1);
-                if(pixels[y*width+x] > xmlHandler.outputMinRange && pixels[y*width+x] < xmlHandler.outputMaxRange) {
+                if(pixels[y*width+x] > xmlHandler.outputMinRange && pixels[y*width+x] < xmlHandler.outputMaxRange && pixels[y*width+x] != -3355444) {
                     uielement.informationDialog("oki");
                     scannerInactive = true;
                     x = minX;
