@@ -5,8 +5,8 @@ class UIElements {
     int camY = 240;
     int camW = 540;    
     int camH = 360;
-    int scanAreaSeperationX = 50;
-    int scanAreaSeperationY = 100;
+    int scanAreaSeperationX = 125-1;
+    int scanAreaSeperationY = 140-1;
     int scanAreaX = camX + scanAreaSeperationX;
     int scanAreaY = camY + scanAreaSeperationY;
     int scanAreaW = camW - 2*scanAreaSeperationX;    

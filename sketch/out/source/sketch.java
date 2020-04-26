@@ -3,6 +3,7 @@ import processing.data.*;
 import processing.event.*; 
 import processing.opengl.*; 
 
+import gab.opencv.*; 
 import processing.video.*; 
 import static javax.swing.JOptionPane.*; 
 
@@ -20,6 +21,7 @@ public class sketch extends PApplet {
 
 
 
+
 PFont font;
 Capture cam;
 UIElements uielement;
@@ -33,6 +35,7 @@ int g = 0;
 int b = 0;
 int c = 0xffb4b4b4;
 int currentScene = 1; 
+
 /* 
 
 currentScene er en variable der kontrollere hvilken menu der bliver vist. 
@@ -82,7 +85,7 @@ public void draw() {
 
     //Opsætning
     if (currentScene == 2) {
-
+        
     }
 
     //Pill-Adder
@@ -142,6 +145,7 @@ class PillAdder {
     String xmlPillName = "";
     //Variabler til GUI slut.
 
+    //Constructor
     PillAdder() {
 
     }
@@ -319,18 +323,88 @@ class PillAdder {
 }
 class Scanner {
 
+    int minX = uielement.scanAreaX+1;
+    int maxX = minX + uielement.scanAreaW-2;
+    int x = minX;
+
+    int minY = uielement.scanAreaY+1;
+    int maxY = minY + uielement.scanAreaH-2;
+    int y = minY;
+
+    int timeBetweenScan = 1100; //Int der angiver hvor lang tid der skal gå mellem hver komplette scanning.
+    int scanTimer;
+    boolean scannerInactive = true;
+
+    int ccc = 0;
+    //Constructor
     Scanner() {
 
     }
 
     public void start() {
         drawUI();
+        scanFrame();
     }
 
+    public void scanFrame() {
 
+        //Scanner inaktiv, så scanTimeren kan blive angivet i millisekunder.
+        if (scannerInactive) {
+            scanTimer = millis();
+        }
+
+        //Scanner bliver sat til aktiv, når timeren har nået den værdi angivet i timeBetweenScan.
+        if (scanTimer % timeBetweenScan > timeBetweenScan-100) {
+            scanTimer = timeBetweenScan-99;
+            scannerInactive = false;
+
+            println(maxY);
+
+
+            //Checker først om scanneren har ikke overskredet både X og Y-grænsen.
+            if (y >= maxY && x >= maxX) {
+
+                x = minX;
+                y = minY;
+
+            } else { //Ingen af koordinaterne har ramt deres max.
+
+                if (y >= maxY) {
+                    //Hvis Y-koordinaten har ramt kanten af boksen, resetter vi dens værdi, og begynde på næste række, X.
+                    x += 5;
+                    y = minY;
+                } else {
+                    //Ingen af checks'ne var succesfulde, så det antages at ingen maks-grænse er noget, og den næste Y-koordinat kan læses.
+                    y += 5;
+                }
+
+            }
+            
+            loadPixels();
+            println("currentscan @frame: " + x + " " + y + " : currentcolor: " + pixels[y*width+x]);
+            for (int i = 0; i < xmlHandler.children.length-1; ++i) {
+                xmlHandler.load(i+1);
+                if(pixels[y*width+x] > xmlHandler.outputMinRange && pixels[y*width+x] < xmlHandler.outputMaxRange) {
+                    uielement.informationDialog("oki");
+                    scannerInactive = true;
+                    x = minX;
+                    y = minY;
+                }
+            }
+
+            rectMode(RADIUS);
+            noFill();
+            stroke(ccc);
+            rect(x, y, 10, 10);
+            
+        }
+
+    }
 
     public void drawUI() {
+
         uielement.drawCameraArea();
+
     }
 
 }
@@ -341,8 +415,8 @@ class UIElements {
     int camY = 240;
     int camW = 540;    
     int camH = 360;
-    int scanAreaSeperationX = 50;
-    int scanAreaSeperationY = 100;
+    int scanAreaSeperationX = 125-1;
+    int scanAreaSeperationY = 140-1;
     int scanAreaX = camX + scanAreaSeperationX;
     int scanAreaY = camY + scanAreaSeperationY;
     int scanAreaW = camW - 2*scanAreaSeperationX;    

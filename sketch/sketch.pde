@@ -1,3 +1,4 @@
+import gab.opencv.*;
 import processing.video.*;
 import static javax.swing.JOptionPane.*;
 
@@ -14,6 +15,7 @@ int g = 0;
 int b = 0;
 color c = #b4b4b4;
 int currentScene = 1; 
+
 /* 
 
 currentScene er en variable der kontrollere hvilken menu der bliver vist. 
@@ -63,7 +65,7 @@ void draw() {
 
     //Opsætning
     if (currentScene == 2) {
-
+        
     }
 
     //Pill-Adder
