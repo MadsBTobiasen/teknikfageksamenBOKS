@@ -4,6 +4,9 @@ class Scanner {
     int maxX = scanAreaW/4*(time.getCurrentTimeSlotInt()+1)+scanAreaX-2;
     int x = minX;
 
+    int bttnBoxColor = #1d60fe;
+    int textBttnColor = color(225);
+
     int minY = scanAreaY+1;
     int maxY = minY + scanAreaH-2;
     int y = minY;
@@ -95,36 +98,62 @@ class Scanner {
 
     void drawUI() {
 
-        //Gør baggrunden grå.
-        noStroke();
-        background(backgroundC);
-        fill(200);
-        rectMode(CORNER);
-        rect(0, 0, camW, height);
-        rect(camW, 0, seperatorW, height);
+        //Tegner baggrunden.
+        uielement.backgroundForScannerAndPillAdder();
+        
+        //Laver en tilbage knap, der går tilbage til menuen
+        uielement.returnBttn();
+
         //Kamera-området.
-        uielement.drawCameraArea();
+        uielement.drawCameraArea();       
 
-        //Knapper.
-        stroke(0);
-        fill(#1d60fe);
-        rect(bttnLeftX, bttnLeftY, bttnWidth, bttnHeight);
-        rect(bttnRightX, bttnRightY, bttnWidth, bttnHeight);
-        rect(longbarFieldX, longbarFieldY, longbarFieldW, longbarFieldH);
+        //Hvis boolean til hjælpe-boksen er true, så vises en besked.
+        if (!informationSeen) {
+            uielement.informationDialog("Hjælp", "Velkommen til EPBox-Scanner.\n\nFor at starte systemet, skal du blot trykke på start knappen, og scanneren vil begynde at lede efter gemte piller i systemet.\nDu kan også pause scanneren ved at trykke på samme knap.", "information");
+            informationSeen = true;
+        }
+        
+        //Registrerer knappetryk.
+        //Åbner hjælp-boksen via en boolean.
+        if (uielement.button(bttnRightX, bttnRightX+bttnWidth, bttnRightY, bttnRightY+bttnHeight, bttnBoxColor, textBttnColor, textSize, "Hjælp")) {
+            informationSeen = false;
+        }
+        
+        //Starter og pauser scannings-funktionen.
+        if (uielement.button(longbarFieldX, longbarFieldX+longbarFieldW, longbarFieldY, longbarFieldY+longbarFieldH, bttnBoxColor, statusColor, textSize, stringScannerStatus)) {
+            
+            if (scannerInactive) {
+                //Stop scanneren.
+                stringScannerStatus = "Stop | Scanner Status: Aktiv";
+                scannerInactive = false;
+                statusColor = scannerColor;
+                x = minX;
+                y = minY;
+            } else {
+                //Start scanneren.
+                stringScannerStatus = "Start | Scanner Status: Inaktiv";
+                scannerInactive = true;
+                statusColor = color(255, 0, 0);
+            }
 
-        //Tekst til knapper.
+        }
+
+
+
+        //Boks der viser klokken, og nuværendee tidspunkt.
         textAlign(CENTER, CENTER);
         textSize(textSize);
-        fill(225);
-        text(time.time(3) + " | " + time.getCurrentTimeSlotString(), bttnLeftX, bttnLeftY, bttnLeftX+bttnWidth, bttnLeftY+bttnHeight-6);       
-        text("Hjælp", bttnRightX, bttnRightY, bttnRightX-15, bttnRightY+bttnHeight-6);
-        fill(statusColor);
-        text(stringScannerStatus, longbarFieldX, longbarFieldY, longbarFieldX+longbarFieldW, longbarFieldY-10);
+
+        fill(bttnBoxColor);
+        rect(bttnLeftX, bttnLeftY, bttnWidth, bttnHeight);
+
+        fill(textBttnColor);
+        text(time.time(3) + " | " + time.getCurrentTimeSlotString(), bttnLeftX, bttnLeftY, bttnWidth, bttnLeftY+bttnHeight-6);       
 
         //Seperator.
         line(camW+seperatorW, 0, camW+seperatorW, height);
 
-        //Liste og status over time-slots.
+        //Liste til status over time-slots.
         fill(200);
         rect(listTextX, listTextY, listTextW, listTextH);
         fill(162);
@@ -146,37 +175,6 @@ class Scanner {
             textAlign(LEFT, CENTER);
             textSize(textSize);
             text(time.stringTimeSlots[i], listTextX+seperatorW, listTextY+seperatorW+listSplitterW+(i+1)*(listTextH+seperatorW)+textSize/2+6);
-
-        }
-
-        //Hvis boolean til hjælpe-boksen er true, så vises en besked.
-        if (!informationSeen) {
-            uielement.informationDialog("Hjælp", "besked", "information");
-            informationSeen = true;
-        }
-        
-        //Registrerer knappetryk.
-        //Åbner hjælp-boksen via en boolean.
-        if (uielement.button(bttnRightX, bttnRightX+bttnWidth, bttnRightY, bttnRightY+bttnHeight)) {
-            informationSeen = false;
-        }
-        
-        //Starter og pauser scannings-funktionen.
-        if (uielement.button(longbarFieldX, longbarFieldX+longbarFieldW, longbarFieldY, longbarFieldY+longbarFieldH)) {
-            
-            if (scannerInactive) {
-                //Stop scanneren.
-                stringScannerStatus = "Stop | Scanner Status: Aktiv";
-                scannerInactive = false;
-                statusColor = scannerColor;
-                x = minX;
-                y = minY;
-            } else {
-                //Start scanneren.
-                stringScannerStatus = "Start | Scanner Status: Inaktiv";
-                scannerInactive = true;
-                statusColor = color(255, 0, 0);
-            }
 
         }
 

@@ -7,7 +7,7 @@ Capture cam;
 UIElements uielement;
 XMLHandler xmlHandler;
 Time time;
-//
+Startmenu startmenu;
 Scanner scanner;
 //
 PillAdder pillAdder;
@@ -100,7 +100,7 @@ void setup() {
     xmlHandler = new XMLHandler();
     time = new Time();
 
-    //
+    startmenu = new Startmenu();
     scanner = new Scanner();
     //
     pillAdder = new PillAdder(); 
@@ -108,10 +108,12 @@ void setup() {
 }
 
 void draw() {
-
+    
+    background(backgroundC);
+    
     //Startmenu
     if (currentScene == 0) {
-
+        startmenu.start();
     }
     
     //Scanner
