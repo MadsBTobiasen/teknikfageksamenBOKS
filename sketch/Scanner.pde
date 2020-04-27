@@ -1,18 +1,24 @@
 class Scanner {
 
-    int minX = uielement.scanAreaX+1;
-    int maxX = minX + uielement.scanAreaW-2;
+    int minX = scanAreaW/4*time.getCurrentTimeSlotInt()+scanAreaX+1;
+    int maxX = scanAreaW/4*(time.getCurrentTimeSlotInt()+1)+scanAreaX-2;
     int x = minX;
 
-    int minY = uielement.scanAreaY+1;
-    int maxY = minY + uielement.scanAreaH-2;
+    int minY = scanAreaY+1;
+    int maxY = minY + scanAreaH-2;
     int y = minY;
 
+    int scannerColor = color(0, 255, 0);
     int timeBetweenScan = 5100; //Int der angiver hvor lang tid der skal gå mellem hver komplette scanning.
     int scanTimer;
+    int statusColor = color(255, 0, 0); 
+    String stringScannerStatus = "Start | Scanner Status: Inaktiv";
     boolean scannerInactive = true;
+    boolean informationSeen = false;
+    boolean[] timeslotBools = {false, false, false, false};
 
-    int ccc = color(0, 255, 0);
+
+
     //Constructor
     Scanner() {
 
@@ -23,6 +29,7 @@ class Scanner {
         scanFrame();
     }
 
+    //Funktion til at scanne webkameraets input.
     void scanFrame() {
 
         //Scanner inaktiv, så scanTimeren kan blive angivet i millisekunder.
@@ -31,18 +38,23 @@ class Scanner {
         }
 
         //Scanner bliver sat til aktiv, når timeren har nået den værdi angivet i timeBetweenScan.
-        if (scanTimer % timeBetweenScan > timeBetweenScan-100) {
+        if (!scannerInactive) {
+            /*
+            if (scanTimer % timeBetweenScan > timeBetweenScan-100 && millis() > 10000) {
             scanTimer = timeBetweenScan-99;
-            scannerInactive = false;
-
-            println(maxY);
-
+            scannerInactive = false;*/
+            
+            //Minx og maxX biver sat alt efter hvilken zone der skal scannes, baseret på et timeslot.
+            minX = scanAreaW/4*time.getCurrentTimeSlotInt()+scanAreaX+1;
+            maxX = scanAreaW/4*(time.getCurrentTimeSlotInt()+1)+scanAreaX-2;
 
             //Checker først om scanneren har ikke overskredet både X og Y-grænsen.
             if (y >= maxY && x >= maxX) {
 
                 x = minX;
                 y = minY;
+                
+                timeslotBools[time.getCurrentTimeSlotInt()] = true;
 
             } else { //Ingen af koordinaterne har ramt deres max.
 
@@ -57,21 +69,24 @@ class Scanner {
 
             }
             
+            //Pixels'ne indenfor scannings-regionen bliver tjekket imod pillerne i XML-filen.
             loadPixels();
             println("currentscan @frame: " + x + " " + y + " : currentcolor: " + pixels[y*width+x]);
             for (int i = 0; i < xmlHandler.children.length-1; ++i) {
+                //Pille er blevet genkendet.
                 xmlHandler.load(i+1);
-                if(pixels[y*width+x] > xmlHandler.outputMinRange && pixels[y*width+x] < xmlHandler.outputMaxRange && pixels[y*width+x] != -3355444) {
-                    uielement.informationDialog("oki");
-                    scannerInactive = true;
+                if(pixels[y*width+x] > xmlHandler.outputMinRange && pixels[y*width+x] < xmlHandler.outputMaxRange) {
+                    uielement.informationDialog("pille ramt: " + pillTimeSlot(x));
+                    timeslotBools[time.getCurrentTimeSlotInt()] = false;
                     x = minX;
                     y = minY;
                 }
             }
 
+            //Tegner en boks om den pixel der bliver scannet.
             rectMode(RADIUS);
             noFill();
-            stroke(ccc);
+            stroke(scannerColor);
             rect(x, y, 10, 10);
             
         }
@@ -80,7 +95,118 @@ class Scanner {
 
     void drawUI() {
 
+        //Gør baggrunden grå.
+        noStroke();
+        background(backgroundC);
+        fill(200);
+        rectMode(CORNER);
+        rect(0, 0, camW, height);
+        rect(camW, 0, seperatorW, height);
+        //Kamera-området.
         uielement.drawCameraArea();
+
+        //Knapper.
+        stroke(0);
+        fill(#1d60fe);
+        rect(bttnLeftX, bttnLeftY, bttnWidth, bttnHeight);
+        rect(bttnRightX, bttnRightY, bttnWidth, bttnHeight);
+        rect(longbarFieldX, longbarFieldY, longbarFieldW, longbarFieldH);
+
+        //Tekst til knapper.
+        textAlign(CENTER, CENTER);
+        textSize(textSize);
+        fill(225);
+        text(time.time(3) + " | " + time.getCurrentTimeSlotString(), bttnLeftX, bttnLeftY, bttnLeftX+bttnWidth, bttnLeftY+bttnHeight-6);       
+        text("Hjælp", bttnRightX, bttnRightY, bttnRightX-15, bttnRightY+bttnHeight-6);
+        fill(statusColor);
+        text(stringScannerStatus, longbarFieldX, longbarFieldY, longbarFieldX+longbarFieldW, longbarFieldY-10);
+
+        //Seperator.
+        line(camW+seperatorW, 0, camW+seperatorW, height);
+
+        //Liste og status over time-slots.
+        fill(200);
+        rect(listTextX, listTextY, listTextW, listTextH);
+        fill(162);
+        rect(listTextX, listTextY+listTextH+seperatorW, listTextW, listSplitterW);
+        fill(0);
+        textAlign(CENTER, CENTER);
+        textSize(textSize);
+        text("Status:", listTextX, listTextY, listTextX-listTextW-57, listTextY+listTextH-10);
+
+        //Tegner kasserne der skal indgå på listen.
+        for (int i = 0; i < time.stringTimeSlots.length; ++i) {
+
+            fill(200);
+            rect(listTextX, listTextY+seperatorW+listSplitterW+(i+1)*(listTextH+seperatorW), listTextW, listTextH);
+            time.timeSlotColor(i);
+            rect(listColorBoxX, listTextY+seperatorW+listSplitterW+(i+1)*(listTextH+seperatorW), listColorBoxW, listTextH);  
+
+            fill(0);
+            textAlign(LEFT, CENTER);
+            textSize(textSize);
+            text(time.stringTimeSlots[i], listTextX+seperatorW, listTextY+seperatorW+listSplitterW+(i+1)*(listTextH+seperatorW)+textSize/2+6);
+
+        }
+
+        //Hvis boolean til hjælpe-boksen er true, så vises en besked.
+        if (!informationSeen) {
+            uielement.informationDialog("Hjælp", "besked", "information");
+            informationSeen = true;
+        }
+        
+        //Registrerer knappetryk.
+        //Åbner hjælp-boksen via en boolean.
+        if (uielement.button(bttnRightX, bttnRightX+bttnWidth, bttnRightY, bttnRightY+bttnHeight)) {
+            informationSeen = false;
+        }
+        
+        //Starter og pauser scannings-funktionen.
+        if (uielement.button(longbarFieldX, longbarFieldX+longbarFieldW, longbarFieldY, longbarFieldY+longbarFieldH)) {
+            
+            if (scannerInactive) {
+                //Stop scanneren.
+                stringScannerStatus = "Stop | Scanner Status: Aktiv";
+                scannerInactive = false;
+                statusColor = scannerColor;
+                x = minX;
+                y = minY;
+            } else {
+                //Start scanneren.
+                stringScannerStatus = "Start | Scanner Status: Inaktiv";
+                scannerInactive = true;
+                statusColor = color(255, 0, 0);
+            }
+
+        }
+
+        //Reset.
+        rectMode(CENTER);
+        noStroke();
+
+    }
+
+    //Funktion der retunere hvilken zone pillen er i. Zonerne er; Nat, morgen, middag, aften.
+    int pillTimeSlot(int xx) {
+
+        //Pillen bliver checket om den er indenfor den fø
+        if (xx < scanAreaW/4*1+scanAreaX) {
+            //Pillen er i nat-zonen.
+            return 1;
+        } else if (xx < scanAreaW/4*2+scanAreaX) {
+            //Pillen er i morgen-zonen.
+            return 2;
+        } else if (xx < scanAreaW/4*3+scanAreaX) {
+            //Pillen er i middag-zonen.
+            return 3;
+        } else if (xx < scanAreaW/4*4+scanAreaX) {
+            //Pillen er i aften-zonen.
+            return 4;
+        } else {
+            //Default værdi, hvis ingen af zonerne er blevet ramt. Dette burde ikke være muligt.
+            println("PILL NOT IN ZONE!");
+            return 0;
+        }
 
     }
 

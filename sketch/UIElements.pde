@@ -1,16 +1,4 @@
 class UIElements {
-    
-    //Kamera
-    int camX = 0;
-    int camY = 240;
-    int camW = 540;    
-    int camH = 360;
-    int scanAreaSeperationX = 125-1;
-    int scanAreaSeperationY = 140-1;
-    int scanAreaX = camX + scanAreaSeperationX;
-    int scanAreaY = camY + scanAreaSeperationY;
-    int scanAreaW = camW - 2*scanAreaSeperationX;    
-    int scanAreaH = camH - 2*scanAreaSeperationY;
 
     //Constructor
     UIElements() {
@@ -35,6 +23,10 @@ class UIElements {
         //Horisontale linjer.
         line(scanAreaX, scanAreaY, scanAreaX, scanAreaY+scanAreaH);
         line(scanAreaX+scanAreaW, scanAreaY, scanAreaX+scanAreaW, scanAreaY+scanAreaH);
+        //Tidspunkt linjer.
+        line(scanAreaW/4*1+scanAreaX, scanAreaY, scanAreaW/4*1+scanAreaX, scanAreaY+scanAreaH);
+        line(scanAreaW/4*2+scanAreaX, scanAreaY, scanAreaW/4*2+scanAreaX, scanAreaY+scanAreaH);
+        line(scanAreaW/4*3+scanAreaX, scanAreaY, scanAreaW/4*3+scanAreaX, scanAreaY+scanAreaH);
         noStroke();
 
     }

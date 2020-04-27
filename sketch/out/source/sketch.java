@@ -26,6 +26,7 @@ PFont font;
 Capture cam;
 UIElements uielement;
 XMLHandler xmlHandler;
+Time time;
 //
 Scanner scanner;
 //
@@ -36,6 +37,56 @@ int b = 0;
 int c = 0xffb4b4b4;
 int currentScene = 1; 
 
+// VARIABLER TIL GUI START.
+    //Vindue.
+    int sW = 800;
+    int sH = 600;
+
+    //Kamera.
+    int camX = 0;
+    int camY = 240;
+    int camW = 540;    
+    int camH = 360;
+
+    //Scanningsområde.
+    int scanAreaSeperationX = 135-1;
+    int scanAreaSeperationY = 100-1;
+    int scanAreaX = camX + scanAreaSeperationX;
+    int scanAreaY = camY + scanAreaSeperationY;
+    int scanAreaW = camW - 2*scanAreaSeperationX;    
+    int scanAreaH = camH - 2*scanAreaSeperationY;
+    
+    //Misc.
+    int seperatorW = 5;
+    int backgroundC = 0xffb4b4b4;
+
+    //Knapper.
+    int bttnWidth = (camW-seperatorW*2)/2;    
+    int bttnHeight = (camY-3*seperatorW)/2;
+    int bttnLeftX = seperatorW;
+    int bttnLeftY = seperatorW;
+    int bttnRightX = seperatorW*2+bttnWidth;
+    int bttnRightY = seperatorW;
+
+    //Farvefelt i Pilladder.
+    int longbarFieldX = seperatorW;
+    int longbarFieldY = 2*seperatorW+bttnHeight;
+    int longbarFieldW = camW - seperatorW;
+    int longbarFieldH = bttnHeight;
+
+    //Liste ved siden af kameraet i Scanneren og Pill-Adder.
+    int listTextX = camW+seperatorW*2;
+    int listTextY = seperatorW;
+    int listColorBoxW = 50; 
+    int listColorBoxX = sW-seperatorW-listColorBoxW;
+    int listTextW = sW-listTextX-seperatorW;
+    int listTextH = 50;
+    int listSplitterW = 10;
+
+    //Text size.    
+    int textSize = 28;
+    
+// VARIABLER TIL GUI SLUT.
 /* 
 
 currentScene er en variable der kontrollere hvilken menu der bliver vist. 
@@ -51,8 +102,13 @@ int pillPixelY = 0;
 int pillColorRangeMin = 0;
 int pillColorRangeMax = 0;
 
+public void settings() {
+
+    size(sW, sH);
+
+}
+
 public void setup() {
-    
 
     font = createFont("Arial", 32);
     textFont(font);
@@ -62,6 +118,8 @@ public void setup() {
 
     uielement = new UIElements();
     xmlHandler = new XMLHandler();
+    time = new Time();
+
     //
     scanner = new Scanner();
     //
@@ -109,41 +167,9 @@ class PillAdder {
     int framesToTake = 100;
 
     boolean informationSeen = false;
-
-    //Variabler til GUI.
-    int camX = uielement.camX;
-    int camY = uielement.camY;
-    int camW = uielement.camW;
-    int camH = uielement.camH;
-    
-    int seperatorW = 5;
-    int backgroundC = 0xffb4b4b4;
-
-    int bttnHelpStartW = (camW-seperatorW*2)/2;    
-    int bttnHelpStartH = (height-camH-3*seperatorW)/2;
-
-    int bttnStartX = seperatorW;
-    int bttnStartY = seperatorW;
-    int bttnHelpX = seperatorW*2+bttnHelpStartW;
-    int bttnHelpY = seperatorW;
-    
-    int pillColorFieldX = seperatorW;
-    int pillColorFieldY = 2*seperatorW+bttnHelpStartH;
-    int pillColorFieldW = camW - seperatorW;
-    int pillColorFieldH = bttnHelpStartH;
-
     boolean drawColorBoxes = false;
-    int pillTextX = camW+seperatorW*2;
-    int pillTextY = seperatorW;
-    int pillTextColorBoxW = 50; 
-    int pillTextColorBoxX = width-seperatorW-pillTextColorBoxW;
-    int pillTextW = width-seperatorW-pillTextX;
-    int pillTextH = 50;
-    int averageColor = 0;
-    int textSize = 28;
-    int boxSplitterW = 10;
+
     String xmlPillName = "";
-    //Variabler til GUI slut.
 
     //Constructor
     PillAdder() {
@@ -151,22 +177,22 @@ class PillAdder {
     }
     
     public void start() {
-        colorMode(RGB, 255, 255, 255);
 
         drawUI();
 
+        //Hvis boolean til hjælpe-boksen er true, så vises en besked.
         if (!informationSeen) {
             uielement.informationDialog("Hjælp", "Velkommen til Pill-Adder.\n\nHer kan du tilføje dine piller til systemet, så systemet kan genkende dem, og sende dig relevante notifikiationer.\nFor at starte, skal du anbringe pilleæsken indenfor den røde kasse, og dernæst trykke på pillen du ønsker at gemme. \nHerefter tryk på 'Start', og lad systemet arbejde. ", "information");
             informationSeen = true;
         }
 
-        //Åbner hjælp knappen via en boolean.
-        if (uielement.button(bttnHelpX, bttnHelpX+bttnHelpStartW, bttnHelpY, bttnHelpY+bttnHelpStartH)) {
+        //Åbner hjælp-boksen via en boolean.
+        if (uielement.button(bttnRightX, bttnRightX+bttnWidth, bttnRightY, bttnRightY+bttnHeight)) {
             informationSeen = false;
         }
 
         //Start-knap, til at starte analysering af pixel.
-        if (uielement.button(bttnStartX, bttnStartX+bttnHelpStartW, bttnStartY, bttnStartY+bttnHelpStartH) && pillPixelX != 0 && pillPixelY != 0) { //Efter en pixel / pille (farve) er blevet valgt, begynd at læse farven. Kan kun blive trykket på, hvis der er blevet valgt en pille / pixel at analysere.
+        if (uielement.button(bttnLeftX, bttnLeftX+bttnWidth, bttnLeftY, bttnLeftY+bttnHeight) && pillPixelX != 0 && pillPixelY != 0) { //Efter en pixel / pille (farve) er blevet valgt, begynd at læse farven. Kan kun blive trykket på, hvis der er blevet valgt en pille / pixel at analysere.
             
             //Sørger for at alle variablerne er reset til standard, så at værdier fra en tidligere analyse, ikke bære over til en ny.
             String pillName = null;
@@ -182,7 +208,7 @@ class PillAdder {
                 
                 delay(200);
                 cam.read();
-                image(cam, -100, 240); //Den nye frame bliver tegnet.
+                image(cam, camW - 639, 240); //Den nye frame bliver tegnet.
                 loadPixels(); //Pixels'array'en opdateres, således at pixels'ne kan blive læst.
                 
                 //If-statement der spørger om den nuværende værdi i pillColorRangeMin er mindre end den læste på skærmen.
@@ -236,7 +262,7 @@ class PillAdder {
         }
 
         //Vælg-pixel-boks.
-        if (uielement.button(uielement.scanAreaX, uielement.scanAreaX+uielement.scanAreaW, uielement.scanAreaY, uielement.scanAreaY+uielement.scanAreaH)) { //Tryk på en pille, så systemet ved hvilken pixel der skal identificeres.
+        if (uielement.button(scanAreaX, scanAreaX+scanAreaW, scanAreaY, scanAreaY+scanAreaH)) { //Tryk på en pille, så systemet ved hvilken pixel der skal identificeres.
         
             pillPixelX = mouseX;
             pillPixelY = mouseY;
@@ -253,6 +279,7 @@ class PillAdder {
     public void drawUI() {
 
         //Gør baggrunden grå.
+        noStroke();
         background(backgroundC);
         fill(200);
         rectMode(CORNER);
@@ -260,60 +287,65 @@ class PillAdder {
         rect(camW, 0, seperatorW, height);
         //Kamera-området.
         uielement.drawCameraArea();
+
         //Knapper.
         stroke(0);
-        
         fill(0xff1d60fe);
-        rect(bttnStartX, bttnStartY, bttnHelpStartW, bttnHelpStartH);
-        rect(bttnHelpX, bttnHelpY, bttnHelpStartW, bttnHelpStartH);
+        rect(bttnLeftX, bttnLeftY, bttnWidth, bttnHeight);
+        rect(bttnRightX, bttnRightY, bttnWidth, bttnHeight);
         fill(c);
-        rect(pillColorFieldX, pillColorFieldY, pillColorFieldW, pillColorFieldH);
+        rect(longbarFieldX, longbarFieldY, longbarFieldW, longbarFieldH);
 
+        //Tekst til knapper.
         textAlign(CENTER, CENTER);
         textSize(textSize);
         fill(225);
-        text("Start", bttnStartX, bttnStartY, bttnStartX+bttnHelpStartW, bttnStartY+bttnHelpStartH-6);       
-        text("Hjælp", bttnHelpX, bttnHelpY, bttnHelpX-15, bttnHelpY+bttnHelpStartH-6);
+        text("Start", bttnLeftX, bttnLeftY, bttnLeftX+bttnWidth, bttnLeftY+bttnHeight-6);       
+        text("Hjælp", bttnRightX, bttnRightY, bttnRightX-15, bttnRightY+bttnHeight-6);
         fill(0);
-        text("Farven på valgte pille", pillColorFieldX, pillColorFieldY, pillColorFieldX+pillColorFieldW, pillColorFieldY-10);
+        text("Farven på valgte pille", longbarFieldX, longbarFieldY, longbarFieldX+longbarFieldW, longbarFieldY-10);
 
+        //Seperator.
         line(camW+seperatorW, 0, camW+seperatorW, height);
         //Liste af piller.
-        fill(188);
-        rect(pillTextX, pillTextY, pillTextW, pillTextH);
+        fill(200);
+        rect(listTextX, listTextY, listTextW, listTextH);
         fill(162);
-        rect(pillTextX, pillTextY+pillTextH+seperatorW, pillTextW, boxSplitterW);
+        rect(listTextX, listTextY+listTextH+seperatorW, listTextW, listSplitterW);
         fill(0);
         textAlign(CENTER, CENTER);
         textSize(textSize);
-        text("Gemte piller:", pillTextX, pillTextY, pillTextX-pillTextW-57, pillTextY+pillTextH-10);
+        text("Gemte piller:", listTextX, listTextY, listTextX-listTextW-57, listTextY+listTextH-10);
 
+        //Indhenter elementer fra XML-filen, og indskriver det i pillelisten.
         for (int i = 0; i < xmlHandler.children.length-1; ++i) {
             xmlHandler.load(i+1);
             xmlPillName = xmlHandler.outputName;
             xmlPillName = xmlPillName.substring(0,1).toUpperCase() + xmlPillName.substring(1).toLowerCase();
-            averageColor = (xmlHandler.outputMinRange+xmlHandler.outputMaxRange)/2;
+
+            /*averageColor = (xmlHandler.outputMinRange+xmlHandler.outputMaxRange)/2;
             
             int r=(averageColor>>16)&255;
             int g=(averageColor>>8)&255;
             int b=averageColor&255; 
 
-            //println(hex(xmlHandler.outputMinRange, 6) + " " + hex(xmlHandler.outputMaxRange, 6));
+            println(hex(xmlHandler.outputMinRange, 6) + " " + hex(xmlHandler.outputMaxRange, 6));*/
 
             fill(188);
-            rect(pillTextX, pillTextY+seperatorW+boxSplitterW+(i+1)*(pillTextH+seperatorW), pillTextW, pillTextH);
+            rect(listTextX, listTextY+seperatorW+listSplitterW+(i+1)*(listTextH+seperatorW), listTextW, listTextH);
             fill(0);
             textAlign(LEFT, CENTER);
             textSize(textSize);
-            text(xmlPillName, pillTextX+seperatorW, pillTextY+seperatorW+boxSplitterW+(i+1)*(pillTextH+seperatorW)+textSize/2+6);
+            text(xmlPillName, listTextX+seperatorW, listTextY+seperatorW+listSplitterW+(i+1)*(listTextH+seperatorW)+textSize/2+6);
 
             if(drawColorBoxes) {
                 fill(r, g, b);
-                rect(pillTextColorBoxX, pillTextY+seperatorW+boxSplitterW+(i+1)*(pillTextH+seperatorW), pillTextColorBoxW, pillTextH);
+                rect(listColorBoxX, listTextY+seperatorW+listSplitterW+(i+1)*(listTextH+seperatorW), listColorBoxW, listTextH);
             }
 
         }
 
+        //Reset.
         rectMode(CENTER);
         noStroke();
 
@@ -323,19 +355,25 @@ class PillAdder {
 }
 class Scanner {
 
-    int minX = uielement.scanAreaX+1;
-    int maxX = minX + uielement.scanAreaW-2;
+    int minX = scanAreaW/4*time.getCurrentTimeSlotInt()+scanAreaX+1;
+    int maxX = scanAreaW/4*(time.getCurrentTimeSlotInt()+1)+scanAreaX-2;
     int x = minX;
 
-    int minY = uielement.scanAreaY+1;
-    int maxY = minY + uielement.scanAreaH-2;
+    int minY = scanAreaY+1;
+    int maxY = minY + scanAreaH-2;
     int y = minY;
 
+    int scannerColor = color(0, 255, 0);
     int timeBetweenScan = 5100; //Int der angiver hvor lang tid der skal gå mellem hver komplette scanning.
     int scanTimer;
+    int statusColor = color(255, 0, 0); 
+    String stringScannerStatus = "Start | Scanner Status: Inaktiv";
     boolean scannerInactive = true;
+    boolean informationSeen = false;
+    boolean[] timeslotBools = {false, false, false, false};
 
-    int ccc = color(0, 255, 0);
+
+
     //Constructor
     Scanner() {
 
@@ -346,6 +384,7 @@ class Scanner {
         scanFrame();
     }
 
+    //Funktion til at scanne webkameraets input.
     public void scanFrame() {
 
         //Scanner inaktiv, så scanTimeren kan blive angivet i millisekunder.
@@ -354,18 +393,23 @@ class Scanner {
         }
 
         //Scanner bliver sat til aktiv, når timeren har nået den værdi angivet i timeBetweenScan.
-        if (scanTimer % timeBetweenScan > timeBetweenScan-100) {
+        if (!scannerInactive) {
+            /*
+            if (scanTimer % timeBetweenScan > timeBetweenScan-100 && millis() > 10000) {
             scanTimer = timeBetweenScan-99;
-            scannerInactive = false;
-
-            println(maxY);
-
+            scannerInactive = false;*/
+            
+            //Minx og maxX biver sat alt efter hvilken zone der skal scannes, baseret på et timeslot.
+            minX = scanAreaW/4*time.getCurrentTimeSlotInt()+scanAreaX+1;
+            maxX = scanAreaW/4*(time.getCurrentTimeSlotInt()+1)+scanAreaX-2;
 
             //Checker først om scanneren har ikke overskredet både X og Y-grænsen.
             if (y >= maxY && x >= maxX) {
 
                 x = minX;
                 y = minY;
+                
+                timeslotBools[time.getCurrentTimeSlotInt()] = true;
 
             } else { //Ingen af koordinaterne har ramt deres max.
 
@@ -380,21 +424,24 @@ class Scanner {
 
             }
             
+            //Pixels'ne indenfor scannings-regionen bliver tjekket imod pillerne i XML-filen.
             loadPixels();
             println("currentscan @frame: " + x + " " + y + " : currentcolor: " + pixels[y*width+x]);
             for (int i = 0; i < xmlHandler.children.length-1; ++i) {
+                //Pille er blevet genkendet.
                 xmlHandler.load(i+1);
-                if(pixels[y*width+x] > xmlHandler.outputMinRange && pixels[y*width+x] < xmlHandler.outputMaxRange && pixels[y*width+x] != -3355444) {
-                    uielement.informationDialog("oki");
-                    scannerInactive = true;
+                if(pixels[y*width+x] > xmlHandler.outputMinRange && pixels[y*width+x] < xmlHandler.outputMaxRange) {
+                    uielement.informationDialog("pille ramt: " + pillTimeSlot(x));
+                    timeslotBools[time.getCurrentTimeSlotInt()] = false;
                     x = minX;
                     y = minY;
                 }
             }
 
+            //Tegner en boks om den pixel der bliver scannet.
             rectMode(RADIUS);
             noFill();
-            stroke(ccc);
+            stroke(scannerColor);
             rect(x, y, 10, 10);
             
         }
@@ -403,24 +450,176 @@ class Scanner {
 
     public void drawUI() {
 
+        //Gør baggrunden grå.
+        noStroke();
+        background(backgroundC);
+        fill(200);
+        rectMode(CORNER);
+        rect(0, 0, camW, height);
+        rect(camW, 0, seperatorW, height);
+        //Kamera-området.
         uielement.drawCameraArea();
+
+        //Knapper.
+        stroke(0);
+        fill(0xff1d60fe);
+        rect(bttnLeftX, bttnLeftY, bttnWidth, bttnHeight);
+        rect(bttnRightX, bttnRightY, bttnWidth, bttnHeight);
+        rect(longbarFieldX, longbarFieldY, longbarFieldW, longbarFieldH);
+
+        //Tekst til knapper.
+        textAlign(CENTER, CENTER);
+        textSize(textSize);
+        fill(225);
+        text(time.time(3) + " | " + time.getCurrentTimeSlotString(), bttnLeftX, bttnLeftY, bttnLeftX+bttnWidth, bttnLeftY+bttnHeight-6);       
+        text("Hjælp", bttnRightX, bttnRightY, bttnRightX-15, bttnRightY+bttnHeight-6);
+        fill(statusColor);
+        text(stringScannerStatus, longbarFieldX, longbarFieldY, longbarFieldX+longbarFieldW, longbarFieldY-10);
+
+        //Seperator.
+        line(camW+seperatorW, 0, camW+seperatorW, height);
+
+        //Liste og status over time-slots.
+        fill(200);
+        rect(listTextX, listTextY, listTextW, listTextH);
+        fill(162);
+        rect(listTextX, listTextY+listTextH+seperatorW, listTextW, listSplitterW);
+        fill(0);
+        textAlign(CENTER, CENTER);
+        textSize(textSize);
+        text("Status:", listTextX, listTextY, listTextX-listTextW-57, listTextY+listTextH-10);
+
+        //Tegner kasserne der skal indgå på listen.
+        for (int i = 0; i < time.stringTimeSlots.length; ++i) {
+
+            fill(200);
+            rect(listTextX, listTextY+seperatorW+listSplitterW+(i+1)*(listTextH+seperatorW), listTextW, listTextH);
+            time.timeSlotColor(i);
+            rect(listColorBoxX, listTextY+seperatorW+listSplitterW+(i+1)*(listTextH+seperatorW), listColorBoxW, listTextH);  
+
+            fill(0);
+            textAlign(LEFT, CENTER);
+            textSize(textSize);
+            text(time.stringTimeSlots[i], listTextX+seperatorW, listTextY+seperatorW+listSplitterW+(i+1)*(listTextH+seperatorW)+textSize/2+6);
+
+        }
+
+        //Hvis boolean til hjælpe-boksen er true, så vises en besked.
+        if (!informationSeen) {
+            uielement.informationDialog("Hjælp", "besked", "information");
+            informationSeen = true;
+        }
+        
+        //Registrerer knappetryk.
+        //Åbner hjælp-boksen via en boolean.
+        if (uielement.button(bttnRightX, bttnRightX+bttnWidth, bttnRightY, bttnRightY+bttnHeight)) {
+            informationSeen = false;
+        }
+        
+        //Starter og pauser scannings-funktionen.
+        if (uielement.button(longbarFieldX, longbarFieldX+longbarFieldW, longbarFieldY, longbarFieldY+longbarFieldH)) {
+            
+            if (scannerInactive) {
+                //Stop scanneren.
+                stringScannerStatus = "Stop | Scanner Status: Aktiv";
+                scannerInactive = false;
+                statusColor = scannerColor;
+                x = minX;
+                y = minY;
+            } else {
+                //Start scanneren.
+                stringScannerStatus = "Start | Scanner Status: Inaktiv";
+                scannerInactive = true;
+                statusColor = color(255, 0, 0);
+            }
+
+        }
+
+        //Reset.
+        rectMode(CENTER);
+        noStroke();
+
+    }
+
+    //Funktion der retunere hvilken zone pillen er i. Zonerne er; Nat, morgen, middag, aften.
+    public int pillTimeSlot(int xx) {
+
+        //Pillen bliver checket om den er indenfor den fø
+        if (xx < scanAreaW/4*1+scanAreaX) {
+            //Pillen er i nat-zonen.
+            return 1;
+        } else if (xx < scanAreaW/4*2+scanAreaX) {
+            //Pillen er i morgen-zonen.
+            return 2;
+        } else if (xx < scanAreaW/4*3+scanAreaX) {
+            //Pillen er i middag-zonen.
+            return 3;
+        } else if (xx < scanAreaW/4*4+scanAreaX) {
+            //Pillen er i aften-zonen.
+            return 4;
+        } else {
+            //Default værdi, hvis ingen af zonerne er blevet ramt. Dette burde ikke være muligt.
+            println("PILL NOT IN ZONE!");
+            return 0;
+        }
 
     }
 
 }
-class UIElements {
+class Time {
     
-    //Kamera
-    int camX = 0;
-    int camY = 240;
-    int camW = 540;    
-    int camH = 360;
-    int scanAreaSeperationX = 125-1;
-    int scanAreaSeperationY = 140-1;
-    int scanAreaX = camX + scanAreaSeperationX;
-    int scanAreaY = camY + scanAreaSeperationY;
-    int scanAreaW = camW - 2*scanAreaSeperationX;    
-    int scanAreaH = camH - 2*scanAreaSeperationY;
+    String[] stringTimeSlots = {"Nat", "Morgen", "Middag", "Aften"};
+    int[] intTimeSlots = {7, 12, 18, 23};
+    //Constructor
+    Time () {
+
+    }
+
+    public String time(int entriesToReturn) {
+        Object[] timeStuffs = {hour(), minute(), second()};
+        String outputString = "";
+
+        for (int i = 0; i < entriesToReturn; ++i) {
+            if(hour() < 10) timeStuffs[0] = nf(hour(), 2);
+            if(minute() < 10) timeStuffs[1] = nf(minute(), 2);
+            if(second() < 10) timeStuffs[2] = nf(second(), 2);
+
+            outputString += timeStuffs[i];
+            if(i+1 != entriesToReturn ) {
+                outputString += ":";
+            }
+        }
+
+        return outputString;
+    }
+
+    public int getCurrentTimeSlotInt() {
+        int output = 0;
+
+        if (intTimeSlots[0] > hour()) output = 0; //Return nat.
+        else if (intTimeSlots[1] > hour()) output = 1; //Return morgen.
+        else if (intTimeSlots[2] > hour()) output = 2; //Return middag.
+        else if (intTimeSlots[3] >= hour()) output = 3; //Return aften.
+
+        return output;
+
+    }
+    
+    public String getCurrentTimeSlotString() {
+
+        return stringTimeSlots[getCurrentTimeSlotInt()];
+
+    }
+
+    public void timeSlotColor(int currentItteration) {
+        if(currentItteration == getCurrentTimeSlotInt() && scanner.timeslotBools[currentItteration]) fill(0xff00ff00);
+        else if(currentItteration == getCurrentTimeSlotInt()) fill(0xffffff00);
+        else if(currentItteration < getCurrentTimeSlotInt()) fill(0xff00ff00);
+        else fill(0xffff0000);
+    }
+
+}
+class UIElements {
 
     //Constructor
     UIElements() {
@@ -445,6 +644,10 @@ class UIElements {
         //Horisontale linjer.
         line(scanAreaX, scanAreaY, scanAreaX, scanAreaY+scanAreaH);
         line(scanAreaX+scanAreaW, scanAreaY, scanAreaX+scanAreaW, scanAreaY+scanAreaH);
+        //Tidspunkt linjer.
+        line(scanAreaW/4*1+scanAreaX, scanAreaY, scanAreaW/4*1+scanAreaX, scanAreaY+scanAreaH);
+        line(scanAreaW/4*2+scanAreaX, scanAreaY, scanAreaW/4*2+scanAreaX, scanAreaY+scanAreaH);
+        line(scanAreaW/4*3+scanAreaX, scanAreaY, scanAreaW/4*3+scanAreaX, scanAreaY+scanAreaH);
         noStroke();
 
     }
@@ -623,7 +826,6 @@ class XMLHandler {
     }
 
 }
-  public void settings() {  size(800, 600); }
   static public void main(String[] passedArgs) {
     String[] appletArgs = new String[] { "sketch" };
     if (passedArgs != null) {

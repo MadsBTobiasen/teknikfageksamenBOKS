@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <pills>
   <pill color="null" maxRange="0" minRange="0">null</pill>
+  <pill color="null" maxRange="-1" minRange="-5">panodil</pill>
   <pill color="gul" maxRange="-2770305" minRange="-3754109">symkevi</pill>
   <pill color="hvid" maxRange="-1573889" minRange="-2228993">panodil</pill>
   <pill color="blå" maxRange="-8741703" minRange="-9659713">kalydeco</pill>
