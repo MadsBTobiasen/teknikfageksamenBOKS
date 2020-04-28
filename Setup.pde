@@ -1,8 +1,0 @@
-class Setup {
-
-    //Constructor
-    Setup() {
-
-    }
-    
-}

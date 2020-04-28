@@ -1,6 +1,8 @@
 import gab.opencv.*;
 import processing.video.*;
 import static javax.swing.JOptionPane.*;
+import oscP5.*;
+import netP5.*;
 
 PFont font;
 Capture cam;
@@ -9,13 +11,19 @@ XMLHandler xmlHandler;
 Time time;
 Startmenu startmenu;
 Scanner scanner;
-//
+Setup setup;
 PillAdder pillAdder;
 int r = 0;
 int g = 0;
 int b = 0;
 color c = #b4b4b4;
-int currentScene = 1; 
+int currentScene = 0; 
+
+OscP5 oscP5;
+OscMessage msg;
+NetAddress unitAddress; 
+String ip = "192.168.10.100";
+int port = 59867;
 
 // VARIABLER TIL GUI START.
     //Vindue.
@@ -93,6 +101,8 @@ void setup() {
     font = createFont("Arial", 32);
     textFont(font);
 
+    oscP5 = new OscP5(this, port);
+    unitAddress = new NetAddress(ip,port);
     cam = new Capture(this);
     cam.start();
 
@@ -102,7 +112,7 @@ void setup() {
 
     startmenu = new Startmenu();
     scanner = new Scanner();
-    //
+    setup = new Setup();
     pillAdder = new PillAdder(); 
 
 }
@@ -126,6 +136,8 @@ void draw() {
     //Opsætning
     if (currentScene == 2) {
         
+        setup.start();
+
     }
 
     //Pill-Adder

@@ -7,7 +7,7 @@ class Startmenu {
     int titleX = titlePixelsFromEdgeX;
     int titleY = titlePixelsFromEdgeY;
 
-    int optionsW = 175;
+    int optionsW = 200;
     int optionsH = 50;
     int optionsSeperationFromTitle = 100;
     int optionsSeperation = 15;
@@ -49,7 +49,7 @@ class Startmenu {
         int xformedY = optionsY - optionsH/2;
 
         if (uielement.button(xformedX, xformedX+optionsW, xformedY+(optionsSeperation+optionsH)*0, xformedY+optionsH+(optionsSeperation+optionsH)*0, bttnBoxColor, textBttnColor, textSize, "Start", RADIUS)) currentScene=1;
-        if (uielement.button(xformedX, xformedX+optionsW, xformedY+(optionsSeperation+optionsH)*1, xformedY+optionsH+(optionsSeperation+optionsH)*1, bttnBoxColor, textBttnColor, textSize, "Opsætning", RADIUS)) currentScene=3;
+        if (uielement.button(xformedX, xformedX+optionsW, xformedY+(optionsSeperation+optionsH)*1, xformedY+optionsH+(optionsSeperation+optionsH)*1, bttnBoxColor, textBttnColor, textSize, "Opsætning", RADIUS)) currentScene=2;
         if (uielement.button(xformedX, xformedX+optionsW, xformedY+(optionsSeperation+optionsH)*2, xformedY+optionsH+(optionsSeperation+optionsH)*2, bttnBoxColor, textBttnColor, textSize, "Luk EPBox", RADIUS)) exit();
 
     }

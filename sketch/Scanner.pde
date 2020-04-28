@@ -52,12 +52,19 @@ class Scanner {
             maxX = scanAreaW/4*(time.getCurrentTimeSlotInt()+1)+scanAreaX-2;
 
             //Checker først om scanneren har ikke overskredet både X og Y-grænsen.
+            //En pille blev
             if (y >= maxY && x >= maxX) {
-
+                //Ingen piller blev i scanningsloopet.
+                //Her resettes scannerens X og Y til standard, og vi sender en OSC-besked til enheden, at der ingen piller er.
                 x = minX;
                 y = minY;
                 
                 timeslotBools[time.getCurrentTimeSlotInt()] = true;
+
+                //oscBesked
+                msg = new OscMessage("/pill");
+                msg.add(false);
+                oscP5.send(msg, unitAddress);
 
             } else { //Ingen af koordinaterne har ramt deres max.
 
@@ -76,13 +83,17 @@ class Scanner {
             loadPixels();
             println("currentscan @frame: " + x + " " + y + " : currentcolor: " + pixels[y*width+x]);
             for (int i = 0; i < xmlHandler.children.length-1; ++i) {
-                //Pille er blevet genkendet.
                 xmlHandler.load(i+1);
                 if(pixels[y*width+x] > xmlHandler.outputMinRange && pixels[y*width+x] < xmlHandler.outputMaxRange) {
+                    //Pille er blevet genkendet.
                     uielement.informationDialog("pille ramt: " + pillTimeSlot(x));
                     timeslotBools[time.getCurrentTimeSlotInt()] = false;
                     x = minX;
                     y = minY;
+                    //oscBesked
+                    msg = new OscMessage("/pill");
+                    msg.add(true);
+                    oscP5.send(msg, unitAddress);
                 }
             }
 

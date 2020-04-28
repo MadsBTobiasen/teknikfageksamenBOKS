@@ -6,6 +6,8 @@ import processing.opengl.*;
 import gab.opencv.*; 
 import processing.video.*; 
 import static javax.swing.JOptionPane.*; 
+import oscP5.*; 
+import netP5.*; 
 
 import java.util.HashMap; 
 import java.util.ArrayList; 
@@ -22,6 +24,8 @@ public class sketch extends PApplet {
 
 
 
+
+
 PFont font;
 Capture cam;
 UIElements uielement;
@@ -29,13 +33,19 @@ XMLHandler xmlHandler;
 Time time;
 Startmenu startmenu;
 Scanner scanner;
-//
+Setup setup;
 PillAdder pillAdder;
 int r = 0;
 int g = 0;
 int b = 0;
 int c = 0xffb4b4b4;
-int currentScene = 1; 
+int currentScene = 0; 
+
+OscP5 oscP5;
+OscMessage msg;
+NetAddress unitAddress; 
+String ip = "192.168.10.100";
+int port = 59867;
 
 // VARIABLER TIL GUI START.
     //Vindue.
@@ -113,6 +123,8 @@ public void setup() {
     font = createFont("Arial", 32);
     textFont(font);
 
+    oscP5 = new OscP5(this, port);
+    unitAddress = new NetAddress(ip,port);
     cam = new Capture(this);
     cam.start();
 
@@ -122,7 +134,7 @@ public void setup() {
 
     startmenu = new Startmenu();
     scanner = new Scanner();
-    //
+    setup = new Setup();
     pillAdder = new PillAdder(); 
 
 }
@@ -146,6 +158,8 @@ public void draw() {
     //Opsætning
     if (currentScene == 2) {
         
+        setup.start();
+
     }
 
     //Pill-Adder
@@ -404,12 +418,19 @@ class Scanner {
             maxX = scanAreaW/4*(time.getCurrentTimeSlotInt()+1)+scanAreaX-2;
 
             //Checker først om scanneren har ikke overskredet både X og Y-grænsen.
+            //En pille blev
             if (y >= maxY && x >= maxX) {
-
+                //Ingen piller blev i scanningsloopet.
+                //Her resettes scannerens X og Y til standard, og vi sender en OSC-besked til enheden, at der ingen piller er.
                 x = minX;
                 y = minY;
                 
                 timeslotBools[time.getCurrentTimeSlotInt()] = true;
+
+                //oscBesked
+                msg = new OscMessage("/pill");
+                msg.add(false);
+                oscP5.send(msg, unitAddress);
 
             } else { //Ingen af koordinaterne har ramt deres max.
 
@@ -428,13 +449,17 @@ class Scanner {
             loadPixels();
             println("currentscan @frame: " + x + " " + y + " : currentcolor: " + pixels[y*width+x]);
             for (int i = 0; i < xmlHandler.children.length-1; ++i) {
-                //Pille er blevet genkendet.
                 xmlHandler.load(i+1);
                 if(pixels[y*width+x] > xmlHandler.outputMinRange && pixels[y*width+x] < xmlHandler.outputMaxRange) {
+                    //Pille er blevet genkendet.
                     uielement.informationDialog("pille ramt: " + pillTimeSlot(x));
                     timeslotBools[time.getCurrentTimeSlotInt()] = false;
                     x = minX;
                     y = minY;
+                    //oscBesked
+                    msg = new OscMessage("/pill");
+                    msg.add(true);
+                    oscP5.send(msg, unitAddress);
                 }
             }
 
@@ -561,16 +586,18 @@ class Scanner {
     }
 
 }
-class Startmenu {
+class Setup {
+
+    PImage settings;
 
     int titlePixelsFromEdgeX = 125;
     int titlePixelsFromEdgeY = 35;
-    int titleH = 6*titlePixelsFromEdgeY;
+    int titleH = 4*titlePixelsFromEdgeY;
     int titleW = sW - 2*titlePixelsFromEdgeX;
     int titleX = titlePixelsFromEdgeX;
     int titleY = titlePixelsFromEdgeY;
 
-    int optionsW = 175;
+    int optionsW = 225;
     int optionsH = 50;
     int optionsSeperationFromTitle = 100;
     int optionsSeperation = 15;
@@ -581,6 +608,88 @@ class Startmenu {
     int bttnBoxColor = 0xff1d60fe;
     int textBttnColor = color(225);
 
+    //Constructor
+    Setup() {
+        settings = loadImage("settings.png");
+    }
+
+    public void start() {
+        drawUI();
+        setup();
+    }
+
+    public void drawUI() {
+
+        stroke(0);
+        textSize(titleH/3);
+        textAlign(CENTER, CENTER);
+        rectMode(CORNER);
+ 
+        noFill();
+        rect(titleX, titleY, titleW, titleH);
+        fill(0);
+        text("Opsætning", titleX, titleY, titleW, titleH-15);
+
+    }
+
+    public void setup() {
+
+        //Laver en tilbage knap, der går tilbage til menuen
+        uielement.returnBttn();
+        
+        //
+        int xformedX = optionsX - optionsW/2;
+        int xformedY = optionsY - optionsH/2;
+        int ipChangeBoxW = 50;
+        int imagePush = 10;
+
+        //Knap der sætter IP-addresse på enheden.
+        rectMode(RADIUS);
+        textSize(textSize);
+        textAlign(LEFT, CENTER);
+
+        fill(200);
+        rect(optionsX, optionsY, optionsW, optionsH/2);
+        fill(0);
+        text("Enheds IP: " + ip, optionsX+10, optionsY, optionsW, optionsH/2-6);
+
+        if (uielement.button(optionsX+optionsW-ipChangeBoxW, optionsX+optionsW-ipChangeBoxW+ipChangeBoxW, optionsY-optionsH/2, optionsY-optionsH/2+ipChangeBoxW, 200, 0, textSize, "")) {
+            String newIP = showInputDialog("Indtast en ny IP-Adresse: "); 
+            if (newIP != null) {
+                ip = newIP;
+                unitAddress = new NetAddress(newIP,port);
+            }
+        }
+
+        image(settings, optionsX+optionsW-ipChangeBoxW+imagePush/2, optionsY-optionsH/2+imagePush/2, ipChangeBoxW-imagePush, optionsH-imagePush);
+
+        //Knap til at tilgå Pill-adder.
+        if (uielement.button(xformedX, xformedX+optionsW, xformedY+(optionsSeperation+optionsH)*1, xformedY+optionsH+(optionsSeperation+optionsH)*1, bttnBoxColor, textBttnColor, textSize, "Tilføj en pille", RADIUS)) currentScene=3;
+
+    }
+    
+}
+class Startmenu {
+
+    int titlePixelsFromEdgeX = 125;
+    int titlePixelsFromEdgeY = 35;
+    int titleH = 6*titlePixelsFromEdgeY;
+    int titleW = sW - 2*titlePixelsFromEdgeX;
+    int titleX = titlePixelsFromEdgeX;
+    int titleY = titlePixelsFromEdgeY;
+
+    int optionsW = 200;
+    int optionsH = 50;
+    int optionsSeperationFromTitle = 100;
+    int optionsSeperation = 15;
+    int optionsX = sW/2;
+    int optionsY = titleY+titleH+optionsSeperationFromTitle;
+    int optionsC = 100;
+
+    int bttnBoxColor = 0xff1d60fe;
+    int textBttnColor = color(225);
+
+    //Constructor
     Startmenu() {
 
     }
@@ -597,7 +706,7 @@ class Startmenu {
         textSize(titleH/3);
         textAlign(CENTER, CENTER);
         rectMode(CORNER);
-
+ 
         noFill();
         rect(titleX, titleY, titleW, titleH);
         fill(0);
@@ -611,7 +720,7 @@ class Startmenu {
         int xformedY = optionsY - optionsH/2;
 
         if (uielement.button(xformedX, xformedX+optionsW, xformedY+(optionsSeperation+optionsH)*0, xformedY+optionsH+(optionsSeperation+optionsH)*0, bttnBoxColor, textBttnColor, textSize, "Start", RADIUS)) currentScene=1;
-        if (uielement.button(xformedX, xformedX+optionsW, xformedY+(optionsSeperation+optionsH)*1, xformedY+optionsH+(optionsSeperation+optionsH)*1, bttnBoxColor, textBttnColor, textSize, "Opsætning", RADIUS)) currentScene=3;
+        if (uielement.button(xformedX, xformedX+optionsW, xformedY+(optionsSeperation+optionsH)*1, xformedY+optionsH+(optionsSeperation+optionsH)*1, bttnBoxColor, textBttnColor, textSize, "Opsætning", RADIUS)) currentScene=2;
         if (uielement.button(xformedX, xformedX+optionsW, xformedY+(optionsSeperation+optionsH)*2, xformedY+optionsH+(optionsSeperation+optionsH)*2, bttnBoxColor, textBttnColor, textSize, "Luk EPBox", RADIUS)) exit();
 
     }
