@@ -5,6 +5,7 @@ class PillAdder {
     int pillColorRangeMin = 0;
     int pillColorRangeMax = 0;
     int framesToTake = 100;
+    int scannerBoxW = 10;
 
     int bttnBoxColor = #1d60fe;
     int textBttnColor = color(225);
@@ -31,10 +32,18 @@ class PillAdder {
 
         //Laver en tilbage knap, der går tilbage til menuen
         uielement.returnBttn();
+        uielement.infoHelpBttn("Her kan du tilføje dine piller til systemet, så systemet kan genkende dem, og sende dig relevante notifikationer.\nFor at starte, skal du anbringe dine piller indenfor den røde kasse, og dernæst trykke på den pille du ønsker at gemme. \nHerefter tryk på 'Start', og lad systemet arbejde. ");
 
         //Kamera-området.
         uielement.drawCameraArea();
         
+        //Tegner en boks om den valgte pixel.
+        rectMode(RADIUS);
+        noFill();
+        stroke(0, 255, 0);
+        rect(pillPixelX, pillPixelY, scannerBoxW, scannerBoxW);
+        rectMode(CORNER);
+
         stroke(0);
         textAlign(CENTER, CENTER);
         textSize(textSize);
@@ -92,7 +101,7 @@ class PillAdder {
 
         //Hvis boolean til hjælpe-boksen er true, så vises en besked.
         if (!informationSeen) {
-            uielement.informationDialog("Hjælp", "Velkommen til Pill-Adder.\n\nHer kan du tilføje dine piller til systemet, så systemet kan genkende dem, og sende dig relevante notifikiationer.\nFor at starte, skal du anbringe dine piller indenfor den røde kasse, og dernæst trykke på den pille du ønsker at gemme. \nHerefter tryk på 'Start', og lad systemet arbejde. ", "information");
+            uielement.informationDialog("Hjælp", "Velkommen til Pill-Adder.\n\nHer kan du tilføje dine piller til systemet, så systemet kan genkende dem, og sende dig relevante notifikationer.\nFor at starte, skal du anbringe dine piller indenfor den røde kasse, og dernæst trykke på den pille du ønsker at gemme. \nHerefter tryk på 'Start', og lad systemet arbejde. ", "information");
             informationSeen = true;
         }
 
@@ -104,7 +113,7 @@ class PillAdder {
         //Start-knap, til at starte analysering af pixel.
         if (uielement.button(bttnLeftX, bttnLeftX+bttnWidth, bttnLeftY, bttnLeftY+bttnHeight, bttnBoxColor, textBttnColor, textSize, "Start") && pillPixelX != 0 && pillPixelY != 0) { //Efter en pixel / pille (farve) er blevet valgt, begynd at læse farven. Kan kun blive trykket på, hvis der er blevet valgt en pille / pixel at analysere.
             
-            //Sørger for at alle variablerne er reset til standard, så at værdier fra en tidligere analyse, ikke bære over til en ny.
+            //Sørger for at alle variablerne er reset til standard, så at værdier fra en tidligere analyse, ikke bærer over til en ny.
             String pillName = null;
             String pillColor = null;
 
@@ -113,10 +122,13 @@ class PillAdder {
             pillColorRangeMin = pixels[pillPixelY*width+pillPixelX];
             pillColorRangeMax = pixels[pillPixelY*width+pillPixelX];
 
-            //Vi tager 1000 billeder af den angivne pixel, og checker dens farve. 
+            //Viser en informations-boks om scanningen.
+            uielement.informationDialog("Når scanneren kører, undlad at placere noget foran kameraet, og lad systemet arbejde.\nSystemet vil fortælle dig, når scanningen er fuldført.\n\nTryk på OK, for at fortsætte.\n");
+
+            //Vi tager x-antal billeder af den angivne pixel, og checker dens farve. 
             for (int i = 0; i < framesToTake; ++i) {
                 
-                delay(200);
+                delay(100);
                 cam.read();
                 image(cam, camW - 639, 240); //Den nye frame bliver tegnet.
                 loadPixels(); //Pixels'array'en opdateres, således at pixels'ne kan blive læst.
@@ -143,7 +155,7 @@ class PillAdder {
             String nameInput = showInputDialog("Færdig! Giv Pillen et navn:\n\nHøjeste Værdi: " + pillColorRangeMax + "\nLaveste Værdi: " + pillColorRangeMin + "\n\nTryk OK for at fortsætte, tryk Cancel for at afbryde");
             
             //Checker om brugeren har givet pillen et navn, eller afbrudt processen. Hvis nameInput ikke fik et navn / blev afbrudt vil nameInput være lig med null.
-            if (nameInput == null) { //Ikke noget input eller afbrudt.
+            if (nameInput == null || nameInput.equals("")) { //Ikke noget input eller afbrudt.
                 
                 uielement.informationDialog("Afbrudt, pillen blev ikke gemt.");
             
@@ -153,7 +165,7 @@ class PillAdder {
                 String colorInput = showInputDialog("Angiv pillen's farve:"); //Spørger efter farven på pillen.
                 
                 //Hvis ingen farve er opgivet, får den bare en "ukendt"-label.
-                if (colorInput == null) {
+                if (colorInput.equals(null) || colorInput.equals("")) {
                     //Brugeren har ikke angivet en farve.
                     pillColor = "ukendt";
 
@@ -162,7 +174,7 @@ class PillAdder {
                     pillColor = colorInput;
                 
                 }
-
+                
                 xmlHandler.save(pillName, pillColor, pillColorRangeMin, pillColorRangeMax);
                 pillPixelX = 0;
                 pillPixelY = 0;

@@ -86,7 +86,7 @@ class Scanner {
                 xmlHandler.load(i+1);
                 if(pixels[y*width+x] > xmlHandler.outputMinRange && pixels[y*width+x] < xmlHandler.outputMaxRange) {
                     //Pille er blevet genkendet.
-                    uielement.informationDialog("pille ramt: " + pillTimeSlot(x));
+                    //uielement.informationDialog("pille ramt: " + pillTimeSlot(x));
                     timeslotBools[time.getCurrentTimeSlotInt()] = false;
                     x = minX;
                     y = minY;
@@ -114,6 +114,7 @@ class Scanner {
         
         //Laver en tilbage knap, der går tilbage til menuen
         uielement.returnBttn();
+        uielement.infoHelpBttn("For at starte systemet, skal du blot trykke på start knappen, og scanneren vil begynde at lede efter gemte piller i systemet.\nDu kan også pause scanneren ved at trykke på samme knap.\n\nNår den grønne boks bevæger sig nede i kamera-boksen, så kører scanneren. Undlad at placere ting såsom hænder, indenfor scanneren.\nTil højre er der nogle status-bokse, de betyder:\n\nRød: Det er endnu ikke dette tidspunkt, og er derfor inaktiv.\nGul: Når boksen er gul, betyder det at systemet har set en pille på tidspunktet, og forbliver gul, indtil pillen er blevet taget.\nGrøn: Pillen er blevet taget.");
 
         //Kamera-området.
         uielement.drawCameraArea();       

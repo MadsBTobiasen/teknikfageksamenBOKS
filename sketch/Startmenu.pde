@@ -18,6 +18,8 @@ class Startmenu {
     int bttnBoxColor = #1d60fe;
     int textBttnColor = color(225);
 
+    boolean informationSeen = false;
+
     //Constructor
     Startmenu() {
 
@@ -30,7 +32,7 @@ class Startmenu {
 
     //Tegner UI til startmenuen.
     void drawUI() {
-
+        
         stroke(0);
         textSize(titleH/3);
         textAlign(CENTER, CENTER);
@@ -39,7 +41,14 @@ class Startmenu {
         noFill();
         rect(titleX, titleY, titleW, titleH);
         fill(0);
-        text("EPBox", titleX, titleY, titleW, titleH-15);
+        text("EPBox: Ordinering", titleX, titleY, titleW, titleH-15);
+        
+        if (!informationSeen) {
+            uielement.informationDialog("EPBox: Ordinering", "Velkommen til EPBox: Ordinering.\n\nHvis det er første gang du kører programmet, bedes du gå igennem opsætning af programmet.\nMangler du hjælp til dette, kan du gå ind på de relevante menuer, eller konsultere brugsanvisningen.", "information");
+            informationSeen = true;
+        }
+
+        uielement.infoHelpBttnSTART("Hvis det er første gang du kører programmet, bedes du gå igennem opsætning af programmet.\nMangler du hjælp til dette, kan du gå ind på de relevante menuer, eller konsultere brugsanvisningen.");
 
     }
 

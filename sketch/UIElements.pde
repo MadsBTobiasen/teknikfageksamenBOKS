@@ -4,6 +4,9 @@ class UIElements {
     int returnBttnH = 50;
     int returnBttnX = camW + returnBttnW;
     int returnBttnY = sH - returnBttnH;
+    int infoHelpBttnW = 50;
+    int infoHelpBttnIconW = 24;
+    int infoHelpBttnH = infoHelpBttnW/5*3;
 
     //Constructor
     UIElements() {
@@ -62,6 +65,36 @@ class UIElements {
         }
 
     }
+
+    //Info / Hjælpe boks med ikon.
+    boolean infoHelpBttn(String strInfo) {
+
+        boolean output = false;
+
+        if(buttonC(returnBttnX-infoHelpBttnW, returnBttnX, returnBttnY, returnBttnY+infoHelpBttnW, 200, 0, infoHelpBttnIconW, "i")) {
+            informationDialog("Information", strInfo, "information");
+            output = true;
+        }
+
+        textFont(font);
+        return output;
+
+    }
+    
+    //Info / Hjælpe boks med ikon.
+    boolean infoHelpBttnSTART(String strInfo) {
+
+        boolean output = false;
+
+        if(buttonC(sW-infoHelpBttnW, sW, returnBttnY, returnBttnY+infoHelpBttnW, 200, 0, infoHelpBttnIconW, "i")) {
+            informationDialog("Information", strInfo, "information");
+            output = true;
+        }
+
+        textFont(font);
+        return output;
+
+    }
     
     //Knap-funktion, hvor der ikke bliver tegnet en boks, men kun registrere museklik indenfor de angivede parametre.
     boolean button(int minX, int maxX, int minY, int maxY) {
@@ -85,6 +118,33 @@ class UIElements {
         rect(minX, minY, dist(minX, 0, maxX, 0), dist(0, minY, 0, maxY));
         fill(textColor);
         text(textString, minX, minY, dist(minX, 0, maxX, 0), dist(0, minY, 0, maxY));
+
+        if (mouseX > minX && mouseX < maxX && mouseY > minY && mouseY < maxY && mousePressed == true) {
+            mousePressed = false;
+            return true;
+        } else {
+            return false;
+        }
+
+    }
+
+    //Knap-funktion, der tegner og registrere museklik indenfor de angivede parametre.
+    boolean buttonC(int minX, int maxX, int minY, int maxY, int rectColor, int textColor, int bTextSize, String textString) { //Funkktion der opfører sig som en knap, ved at registrere om musen bliver klikket indenfor en given region.
+
+        textSize(bTextSize);
+        textAlign(CENTER, CENTER);
+        rectMode(CORNER);
+        stroke(0);
+
+        fill(rectColor);
+        rect(minX, minY, dist(minX, 0, maxX, 0), dist(0, minY, 0, maxY));
+
+        fill(#1d60fe);
+        circle(minX+dist(minX, 0, maxX, 0)/2+1, minY+dist(0, minY, 0, maxY)/2+1, infoHelpBttnW-5);
+
+        fill(textColor);
+        text(textString, minX+2, minY, dist(minX, 0, maxX, 0), dist(0, minY, 0, maxY)-6);
+        
 
         if (mouseX > minX && mouseX < maxX && mouseY > minY && mouseY < maxY && mousePressed == true) {
             mousePressed = false;

@@ -26,7 +26,12 @@ public class sketch extends PApplet {
 
 
 
+PImage logo;
+PImage icon;
+PrintWriter writer;
+BufferedReader reader;
 PFont font;
+PFont ifont;
 Capture cam;
 UIElements uielement;
 XMLHandler xmlHandler;
@@ -121,12 +126,13 @@ public void settings() {
 public void setup() {
 
     font = createFont("Arial", 32);
+    icon = loadImage("epboxicon.png");
+    logo = loadImage("epboxlogo.png");
+
     textFont(font);
 
     oscP5 = new OscP5(this, port);
     unitAddress = new NetAddress(ip,port);
-    cam = new Capture(this);
-    cam.start();
 
     uielement = new UIElements();
     xmlHandler = new XMLHandler();
@@ -136,6 +142,11 @@ public void setup() {
     scanner = new Scanner();
     setup = new Setup();
     pillAdder = new PillAdder(); 
+
+    ip = xmlHandler.readIP();
+
+    cam = new Capture(this, 640, 480, "USB Camera", 30);
+    cam.start();
 
 }
 
@@ -181,6 +192,7 @@ class PillAdder {
     int pillColorRangeMin = 0;
     int pillColorRangeMax = 0;
     int framesToTake = 100;
+    int scannerBoxW = 10;
 
     int bttnBoxColor = 0xff1d60fe;
     int textBttnColor = color(225);
@@ -207,10 +219,18 @@ class PillAdder {
 
         //Laver en tilbage knap, der går tilbage til menuen
         uielement.returnBttn();
+        uielement.infoHelpBttn("Her kan du tilføje dine piller til systemet, så systemet kan genkende dem, og sende dig relevante notifikationer.\nFor at starte, skal du anbringe dine piller indenfor den røde kasse, og dernæst trykke på den pille du ønsker at gemme. \nHerefter tryk på 'Start', og lad systemet arbejde. ");
 
         //Kamera-området.
         uielement.drawCameraArea();
         
+        //Tegner en boks om den valgte pixel.
+        rectMode(RADIUS);
+        noFill();
+        stroke(0, 255, 0);
+        rect(pillPixelX, pillPixelY, scannerBoxW, scannerBoxW);
+        rectMode(CORNER);
+
         stroke(0);
         textAlign(CENTER, CENTER);
         textSize(textSize);
@@ -268,7 +288,7 @@ class PillAdder {
 
         //Hvis boolean til hjælpe-boksen er true, så vises en besked.
         if (!informationSeen) {
-            uielement.informationDialog("Hjælp", "Velkommen til Pill-Adder.\n\nHer kan du tilføje dine piller til systemet, så systemet kan genkende dem, og sende dig relevante notifikiationer.\nFor at starte, skal du anbringe dine piller indenfor den røde kasse, og dernæst trykke på den pille du ønsker at gemme. \nHerefter tryk på 'Start', og lad systemet arbejde. ", "information");
+            uielement.informationDialog("Hjælp", "Velkommen til Pill-Adder.\n\nHer kan du tilføje dine piller til systemet, så systemet kan genkende dem, og sende dig relevante notifikationer.\nFor at starte, skal du anbringe dine piller indenfor den røde kasse, og dernæst trykke på den pille du ønsker at gemme. \nHerefter tryk på 'Start', og lad systemet arbejde. ", "information");
             informationSeen = true;
         }
 
@@ -280,7 +300,7 @@ class PillAdder {
         //Start-knap, til at starte analysering af pixel.
         if (uielement.button(bttnLeftX, bttnLeftX+bttnWidth, bttnLeftY, bttnLeftY+bttnHeight, bttnBoxColor, textBttnColor, textSize, "Start") && pillPixelX != 0 && pillPixelY != 0) { //Efter en pixel / pille (farve) er blevet valgt, begynd at læse farven. Kan kun blive trykket på, hvis der er blevet valgt en pille / pixel at analysere.
             
-            //Sørger for at alle variablerne er reset til standard, så at værdier fra en tidligere analyse, ikke bære over til en ny.
+            //Sørger for at alle variablerne er reset til standard, så at værdier fra en tidligere analyse, ikke bærer over til en ny.
             String pillName = null;
             String pillColor = null;
 
@@ -289,10 +309,13 @@ class PillAdder {
             pillColorRangeMin = pixels[pillPixelY*width+pillPixelX];
             pillColorRangeMax = pixels[pillPixelY*width+pillPixelX];
 
-            //Vi tager 1000 billeder af den angivne pixel, og checker dens farve. 
+            //Viser en informations-boks om scanningen.
+            uielement.informationDialog("Når scanneren kører, undlad at placere noget foran kameraet, og lad systemet arbejde.\nSystemet vil fortælle dig, når scanningen er fuldført.\n\nTryk på OK, for at fortsætte.\n");
+
+            //Vi tager x-antal billeder af den angivne pixel, og checker dens farve. 
             for (int i = 0; i < framesToTake; ++i) {
                 
-                delay(200);
+                delay(100);
                 cam.read();
                 image(cam, camW - 639, 240); //Den nye frame bliver tegnet.
                 loadPixels(); //Pixels'array'en opdateres, således at pixels'ne kan blive læst.
@@ -319,7 +342,7 @@ class PillAdder {
             String nameInput = showInputDialog("Færdig! Giv Pillen et navn:\n\nHøjeste Værdi: " + pillColorRangeMax + "\nLaveste Værdi: " + pillColorRangeMin + "\n\nTryk OK for at fortsætte, tryk Cancel for at afbryde");
             
             //Checker om brugeren har givet pillen et navn, eller afbrudt processen. Hvis nameInput ikke fik et navn / blev afbrudt vil nameInput være lig med null.
-            if (nameInput == null) { //Ikke noget input eller afbrudt.
+            if (nameInput == null || nameInput.equals("")) { //Ikke noget input eller afbrudt.
                 
                 uielement.informationDialog("Afbrudt, pillen blev ikke gemt.");
             
@@ -329,7 +352,7 @@ class PillAdder {
                 String colorInput = showInputDialog("Angiv pillen's farve:"); //Spørger efter farven på pillen.
                 
                 //Hvis ingen farve er opgivet, får den bare en "ukendt"-label.
-                if (colorInput == null) {
+                if (colorInput.equals(null) || colorInput.equals("")) {
                     //Brugeren har ikke angivet en farve.
                     pillColor = "ukendt";
 
@@ -338,7 +361,7 @@ class PillAdder {
                     pillColor = colorInput;
                 
                 }
-
+                
                 xmlHandler.save(pillName, pillColor, pillColorRangeMin, pillColorRangeMax);
                 pillPixelX = 0;
                 pillPixelY = 0;
@@ -452,7 +475,7 @@ class Scanner {
                 xmlHandler.load(i+1);
                 if(pixels[y*width+x] > xmlHandler.outputMinRange && pixels[y*width+x] < xmlHandler.outputMaxRange) {
                     //Pille er blevet genkendet.
-                    uielement.informationDialog("pille ramt: " + pillTimeSlot(x));
+                    //uielement.informationDialog("pille ramt: " + pillTimeSlot(x));
                     timeslotBools[time.getCurrentTimeSlotInt()] = false;
                     x = minX;
                     y = minY;
@@ -480,6 +503,7 @@ class Scanner {
         
         //Laver en tilbage knap, der går tilbage til menuen
         uielement.returnBttn();
+        uielement.infoHelpBttn("For at starte systemet, skal du blot trykke på start knappen, og scanneren vil begynde at lede efter gemte piller i systemet.\nDu kan også pause scanneren ved at trykke på samme knap.\n\nNår den grønne boks bevæger sig nede i kamera-boksen, så kører scanneren. Undlad at placere ting såsom hænder, indenfor scanneren.\nTil højre er der nogle status-bokse, de betyder:\n\nRød: Det er endnu ikke dette tidspunkt, og er derfor inaktiv.\nGul: Når boksen er gul, betyder det at systemet har set en pille på tidspunktet, og forbliver gul, indtil pillen er blevet taget.\nGrøn: Pillen er blevet taget.");
 
         //Kamera-området.
         uielement.drawCameraArea();       
@@ -608,6 +632,8 @@ class Setup {
     int bttnBoxColor = 0xff1d60fe;
     int textBttnColor = color(225);
 
+    boolean informationSeen = false;
+
     //Constructor
     Setup() {
         settings = loadImage("settings.png");
@@ -634,7 +660,13 @@ class Setup {
 
     public void setup() {
 
+        if (!informationSeen) {
+            uielement.informationDialog("Velkommen til Opsætning.\n\nHer i opsætning kan du indstille de funktioner der skal til at systemet kan finde dine piller.\n\nIP-Adresse:\nFor at du kan modtage notifikationer på EPBox til Patienter, skal du indtaste IP-adressen, som man finder i menuen på EPBox til Patienter.\n\nPill-Adder:\nI Pill-Adder kan du tilføje din piller til systemet, så at de kan blive genkendt af systemet, og give dig relevante notifikationer.");
+            informationSeen = true;
+        }
+
         //Laver en tilbage knap, der går tilbage til menuen
+        uielement.infoHelpBttn("Her i opsætning kan du indstille de funktioner der skal til at systemet kan finde dine piller.\n\nIP-Adresse:\nFor at du kan modtage notifikationer på EPBox til Patienter, skal du indtaste IP-adressen, som man finder i menuen på EPBox til Patienter.\nPill-Adder:\nI Pill-Adder kan du tilføje din piller til systemet, så at de kan blive genkendt af systemet, og give dig relevante notifikationer.");
         uielement.returnBttn();
         
         //
@@ -657,6 +689,7 @@ class Setup {
             String newIP = showInputDialog("Indtast en ny IP-Adresse: "); 
             if (newIP != null) {
                 ip = newIP;
+                xmlHandler.writeIP("ip=" + newIP);
                 unitAddress = new NetAddress(newIP,port);
             }
         }
@@ -689,6 +722,8 @@ class Startmenu {
     int bttnBoxColor = 0xff1d60fe;
     int textBttnColor = color(225);
 
+    boolean informationSeen = false;
+
     //Constructor
     Startmenu() {
 
@@ -701,7 +736,7 @@ class Startmenu {
 
     //Tegner UI til startmenuen.
     public void drawUI() {
-
+        
         stroke(0);
         textSize(titleH/3);
         textAlign(CENTER, CENTER);
@@ -709,8 +744,16 @@ class Startmenu {
  
         noFill();
         rect(titleX, titleY, titleW, titleH);
+        image(logo, 0, 0);
         fill(0);
-        text("EPBox", titleX, titleY, titleW, titleH-15);
+        text("EPBox: Ordinering", titleX, titleY, titleW, titleH-15);
+        
+        if (!informationSeen) {
+            uielement.informationDialog("EPBox: Ordinering", "Velkommen til EPBox: Ordinering.\n\nHvis det er første gang du kører programmet, bedes du gå igennem opsætning af programmet.\nMangler du hjælp til dette, kan du gå ind på de relevante menuer, eller konsultere brugsanvisningen.", "information");
+            informationSeen = true;
+        }
+
+        uielement.infoHelpBttnSTART("Hvis det er første gang du kører programmet, bedes du gå igennem opsætning af programmet.\nMangler du hjælp til dette, kan du gå ind på de relevante menuer, eller konsultere brugsanvisningen.");
 
     }
 
@@ -785,6 +828,9 @@ class UIElements {
     int returnBttnH = 50;
     int returnBttnX = camW + returnBttnW;
     int returnBttnY = sH - returnBttnH;
+    int infoHelpBttnW = 50;
+    int infoHelpBttnIconW = 24;
+    int infoHelpBttnH = infoHelpBttnW/5*3;
 
     //Constructor
     UIElements() {
@@ -843,6 +889,36 @@ class UIElements {
         }
 
     }
+
+    //Info / Hjælpe boks med ikon.
+    public boolean infoHelpBttn(String strInfo) {
+
+        boolean output = false;
+
+        if(buttonC(returnBttnX-infoHelpBttnW, returnBttnX, returnBttnY, returnBttnY+infoHelpBttnW, 200, 0, infoHelpBttnIconW, "i")) {
+            informationDialog("Information", strInfo, "information");
+            output = true;
+        }
+
+        textFont(font);
+        return output;
+
+    }
+    
+    //Info / Hjælpe boks med ikon.
+    public boolean infoHelpBttnSTART(String strInfo) {
+
+        boolean output = false;
+
+        if(buttonC(sW-infoHelpBttnW, sW, returnBttnY, returnBttnY+infoHelpBttnW, 200, 0, infoHelpBttnIconW, "i")) {
+            informationDialog("Information", strInfo, "information");
+            output = true;
+        }
+
+        textFont(font);
+        return output;
+
+    }
     
     //Knap-funktion, hvor der ikke bliver tegnet en boks, men kun registrere museklik indenfor de angivede parametre.
     public boolean button(int minX, int maxX, int minY, int maxY) {
@@ -866,6 +942,33 @@ class UIElements {
         rect(minX, minY, dist(minX, 0, maxX, 0), dist(0, minY, 0, maxY));
         fill(textColor);
         text(textString, minX, minY, dist(minX, 0, maxX, 0), dist(0, minY, 0, maxY));
+
+        if (mouseX > minX && mouseX < maxX && mouseY > minY && mouseY < maxY && mousePressed == true) {
+            mousePressed = false;
+            return true;
+        } else {
+            return false;
+        }
+
+    }
+
+    //Knap-funktion, der tegner og registrere museklik indenfor de angivede parametre.
+    public boolean buttonC(int minX, int maxX, int minY, int maxY, int rectColor, int textColor, int bTextSize, String textString) { //Funkktion der opfører sig som en knap, ved at registrere om musen bliver klikket indenfor en given region.
+
+        textSize(bTextSize);
+        textAlign(CENTER, CENTER);
+        rectMode(CORNER);
+        stroke(0);
+
+        fill(rectColor);
+        rect(minX, minY, dist(minX, 0, maxX, 0), dist(0, minY, 0, maxY));
+
+        fill(0xff1d60fe);
+        circle(minX+dist(minX, 0, maxX, 0)/2+1, minY+dist(0, minY, 0, maxY)/2+1, infoHelpBttnW-5);
+
+        fill(textColor);
+        text(textString, minX+2, minY, dist(minX, 0, maxX, 0), dist(0, minY, 0, maxY)-6);
+        
 
         if (mouseX > minX && mouseX < maxX && mouseY > minY && mouseY < maxY && mousePressed == true) {
             mousePressed = false;
@@ -972,6 +1075,7 @@ class XMLHandler {
     XMLHandler() {
         xml = loadXML("data/pills.xml");
         children = xml.getChildren("pill");
+        reader = createReader("data/config.txt");
     }
 
     //Void loader XML-filens variabler ind i nogle variabler, med et tal angivet som hvilken række der skal skannes.
@@ -1066,6 +1170,32 @@ class XMLHandler {
             saveXML(xml, "data/pills.xml");
             uielement.informationDialog("Pille gemt", "Success!!\nDin pille blev gemt.", "information");
         }
+
+    }
+
+    //Skriver IP til config.txt filen.
+    public void writeIP(String ip) {
+        writer = createWriter("data/config.txt");
+        writer.println(ip);
+        writer.close();
+    }
+
+    //Læser IP fra config.txt filen.
+    public String readIP() {
+        String line = "";
+        String output = null;
+        boolean lineRead = false;
+
+        try {
+            line = reader.readLine();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+
+        String[] splitLine = split(line, "=");
+        output = splitLine[1];
+        
+        return output;
 
     }
 

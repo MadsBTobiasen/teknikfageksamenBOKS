@@ -9,6 +9,7 @@ class XMLHandler {
     XMLHandler() {
         xml = loadXML("data/pills.xml");
         children = xml.getChildren("pill");
+        reader = createReader("data/config.txt");
     }
 
     //Void loader XML-filens variabler ind i nogle variabler, med et tal angivet som hvilken række der skal skannes.
@@ -103,6 +104,32 @@ class XMLHandler {
             saveXML(xml, "data/pills.xml");
             uielement.informationDialog("Pille gemt", "Success!!\nDin pille blev gemt.", "information");
         }
+
+    }
+
+    //Skriver IP til config.txt filen.
+    void writeIP(String ip) {
+        writer = createWriter("data/config.txt");
+        writer.println(ip);
+        writer.close();
+    }
+
+    //Læser IP fra config.txt filen.
+    String readIP() {
+        String line = "";
+        String output = null;
+        boolean lineRead = false;
+
+        try {
+            line = reader.readLine();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+
+        String[] splitLine = split(line, "=");
+        output = splitLine[1];
+        
+        return output;
 
     }
 

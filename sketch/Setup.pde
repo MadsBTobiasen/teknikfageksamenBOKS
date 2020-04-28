@@ -20,6 +20,8 @@ class Setup {
     int bttnBoxColor = #1d60fe;
     int textBttnColor = color(225);
 
+    boolean informationSeen = false;
+
     //Constructor
     Setup() {
         settings = loadImage("settings.png");
@@ -46,7 +48,13 @@ class Setup {
 
     void setup() {
 
+        if (!informationSeen) {
+            uielement.informationDialog("Velkommen til Opsætning.\n\nHer i opsætning kan du indstille de funktioner der skal til at systemet kan finde dine piller.\n\nIP-Adresse:\nFor at du kan modtage notifikationer på EPBox til Patienter, skal du indtaste IP-adressen, som man finder i menuen på EPBox til Patienter.\n\nPill-Adder:\nI Pill-Adder kan du tilføje din piller til systemet, så at de kan blive genkendt af systemet, og give dig relevante notifikationer.");
+            informationSeen = true;
+        }
+
         //Laver en tilbage knap, der går tilbage til menuen
+        uielement.infoHelpBttn("Her i opsætning kan du indstille de funktioner der skal til at systemet kan finde dine piller.\n\nIP-Adresse:\nFor at du kan modtage notifikationer på EPBox til Patienter, skal du indtaste IP-adressen, som man finder i menuen på EPBox til Patienter.\nPill-Adder:\nI Pill-Adder kan du tilføje din piller til systemet, så at de kan blive genkendt af systemet, og give dig relevante notifikationer.");
         uielement.returnBttn();
         
         //
@@ -69,6 +77,7 @@ class Setup {
             String newIP = showInputDialog("Indtast en ny IP-Adresse: "); 
             if (newIP != null) {
                 ip = newIP;
+                xmlHandler.writeIP("ip=" + newIP);
                 unitAddress = new NetAddress(newIP,port);
             }
         }

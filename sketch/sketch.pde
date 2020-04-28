@@ -4,7 +4,12 @@ import static javax.swing.JOptionPane.*;
 import oscP5.*;
 import netP5.*;
 
+PImage logo;
+PImage icon;
+PrintWriter writer;
+BufferedReader reader;
 PFont font;
+PFont ifont;
 Capture cam;
 UIElements uielement;
 XMLHandler xmlHandler;
@@ -99,12 +104,13 @@ void settings() {
 void setup() {
 
     font = createFont("Arial", 32);
+    icon = loadImage("epboxicon.png");
+    logo = loadImage("epboxlogo.png");
+
     textFont(font);
 
     oscP5 = new OscP5(this, port);
     unitAddress = new NetAddress(ip,port);
-    cam = new Capture(this);
-    cam.start();
 
     uielement = new UIElements();
     xmlHandler = new XMLHandler();
@@ -114,6 +120,11 @@ void setup() {
     scanner = new Scanner();
     setup = new Setup();
     pillAdder = new PillAdder(); 
+
+    ip = xmlHandler.readIP();
+
+    cam = new Capture(this, 640, 480, "USB Camera", 30);
+    cam.start();
 
 }
 
